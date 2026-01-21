@@ -49,6 +49,13 @@ function get_kib_types() {
 }
 
 /**
+ * Ambil semua units (sekolah)
+ */
+function get_units() {
+    return db_fetch_all("SELECT id, code, name FROM units ORDER BY name ASC");
+}
+
+/**
  * Sanitize input
  */
 function sanitize($input) {

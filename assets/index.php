@@ -10,17 +10,27 @@ $months = get_months();
 $year = (int)($_GET['year'] ?? date('Y'));
 $years = range(2020, date('Y') + 1);
 
-// Ambil data aset
-$assets = db_fetch_all(
-    "SELECT * FROM assets_monthly WHERE year = ? ORDER BY kib_type, month",
+// Ambil data aset yang di-aggregate per KIB, bulan, tahun (ringkasan)
+$assets_summary = db_fetch_all(
+    "SELECT 
+        a.kib_type,
+        a.year,
+        a.month,
+        COUNT(DISTINCT a.unit_id) as jumlah_sekolah,
+        SUM(a.total) as total_aset,
+        MAX(a.created_at) as last_updated
+     FROM assets_monthly a
+     WHERE a.year = ? 
+     GROUP BY a.kib_type, a.year, a.month
+     ORDER BY a.kib_type, a.month",
     'i',
     [$year]
 );
 
-// Group by KIB
+// Group by KIB untuk tampilan
 $assets_by_kib = [];
-foreach ($assets as $asset) {
-    $assets_by_kib[$asset['kib_type']][] = $asset;
+foreach ($assets_summary as $summary) {
+    $assets_by_kib[$summary['kib_type']][] = $summary;
 }
 ?>
 <!DOCTYPE html>
@@ -78,7 +88,7 @@ foreach ($assets as $asset) {
                         <?php endforeach; ?>
                     </select>
                     <a href="create.php" class="btn btn-sm btn-primary">
-                        <i class="fas fa-plus me-1"></i>Tambah
+                        <i class="fas fa-plus me-1"></i>Tambah Aset
                     </a>
                 </form>
             </div>
@@ -94,28 +104,29 @@ foreach ($assets as $asset) {
                             <tr>
                                 <th>Bulan</th>
                                 <th>Tahun</th>
+                                <th>Jumlah Sekolah</th>
                                 <th>Total Aset</th>
-                                <th>Input Oleh</th>
-                                <th>Tanggal Input</th>
+                                <th>Terakhir Diupdate</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (!empty($assets_by_kib[$kib])): ?>
-                                <?php foreach ($assets_by_kib[$kib] as $asset): ?>
+                                <?php foreach ($assets_by_kib[$kib] as $summary): ?>
                                     <tr>
-                                        <td><?php echo get_month_name($asset['month']); ?></td>
-                                        <td><?php echo $asset['year']; ?></td>
-                                        <td><?php echo number_format($asset['total'], 0, ',', '.'); ?></td>
-                                        <td>--</td>
-                                        <td><?php echo format_date($asset['created_at']); ?></td>
+                                        <td><strong><?php echo get_month_name($summary['month']); ?></strong></td>
+                                        <td><?php echo $summary['year']; ?></td>
                                         <td>
-                                            <a href="edit.php?id=<?php echo $asset['id']; ?>" class="btn btn-sm btn-warning">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <a href="delete.php?id=<?php echo $asset['id']; ?>" class="btn btn-sm btn-danger" 
-                                               onclick="return confirm('Yakin hapus data?')">
-                                                <i class="fas fa-trash"></i>
+                                            <span class="badge bg-info"><?php echo $summary['jumlah_sekolah']; ?> Sekolah</span>
+                                        </td>
+                                        <td>
+                                            <strong class="text-primary"><?php echo number_format($summary['total_aset'], 0, ',', '.'); ?></strong>
+                                        </td>
+                                        <td><?php echo format_date($summary['last_updated']); ?></td>
+                                        <td>
+                                            <a href="detail.php?kib=<?php echo $kib; ?>&year=<?php echo $summary['year']; ?>&month=<?php echo $summary['month']; ?>" 
+                                               class="btn btn-sm btn-primary">
+                                                <i class="fas fa-eye me-1"></i>Lihat Detail
                                             </a>
                                         </td>
                                     </tr>

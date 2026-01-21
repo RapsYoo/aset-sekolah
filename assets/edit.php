@@ -8,7 +8,14 @@ $months = get_months();
 $kib_types = get_kib_types();
 
 $id = (int)($_GET['id'] ?? 0);
-$asset = db_fetch_one("SELECT * FROM assets_monthly WHERE id = ?", 'i', [$id]);
+$asset = db_fetch_one(
+    "SELECT a.*, un.name as unit_name, un.code as unit_code
+     FROM assets_monthly a
+     LEFT JOIN units un ON a.unit_id = un.id
+     WHERE a.id = ?",
+    'i',
+    [$id]
+);
 
 if (!$asset) {
     header("Location: index.php");
@@ -33,8 +40,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bind_param('ii', $total, $id);
             
             if ($stmt->execute()) {
-                $success = 'Data aset berhasil diperbarui!';
-                $asset['total'] = $total;
+                // Redirect ke halaman detail
+                header("Location: detail.php?kib={$asset['kib_type']}&year={$asset['year']}&month={$asset['month']}&success=1");
+                exit();
             } else {
                 $error = 'Gagal memperbarui data: ' . $stmt->error;
             }
@@ -67,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <a class="navbar-brand" href="../dashboard.php">
                 <i class="fas fa-chart-bar me-2"></i>Monitoring Aset Sekolah
             </a>
-            <a class="nav-link text-white" href="index.php">
+            <a class="nav-link text-white" href="detail.php?kib=<?php echo $asset['kib_type']; ?>&year=<?php echo $asset['year']; ?>&month=<?php echo $asset['month']; ?>">
                 <i class="fas fa-arrow-left me-2"></i>Kembali
             </a>
         </div>
@@ -88,15 +96,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                         <?php endif; ?>
                         
-                        <?php if ($success): ?>
-                            <div class="alert alert-success alert-dismissible fade show">
-                                <?php echo escape($success); ?>
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        <?php endif; ?>
 
                         <form method="POST">
                             <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+
+                            <div class="mb-3">
+                                <label class="form-label">Sekolah</label>
+                                <input type="text" class="form-control" 
+                                       value="<?php echo escape($asset['unit_name'] ?? 'N/A'); ?> (<?php echo escape($asset['unit_code'] ?? ''); ?>)" 
+                                       disabled>
+                            </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Jenis KIB</label>
@@ -120,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
 
                             <div class="d-grid gap-2 d-md-flex justify-content-md-between">
-                                <a href="index.php" class="btn btn-secondary">Batal</a>
+                                <a href="detail.php?kib=<?php echo $asset['kib_type']; ?>&year=<?php echo $asset['year']; ?>&month=<?php echo $asset['month']; ?>" class="btn btn-secondary">Batal</a>
                                 <button type="submit" class="btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                                     <i class="fas fa-save me-2"></i>Simpan Perubahan
                                 </button>
