@@ -89,32 +89,22 @@ $units = db_fetch_all("SELECT * FROM units ORDER BY created_at DESC");
         <div class="table-container mb-4">
             <h5 class="mb-3"><i class="fas fa-plus me-2"></i>Tambah Unit Baru</h5>
 
-            <?php if ($error): ?>
-                <div class="alert alert-danger alert-dismissible fade show">
-                    <?php echo escape($error); ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            <?php endif; ?>
             
-            <?php if ($success): ?>
-                <div class="alert alert-success alert-dismissible fade show">
-                    <?php echo escape($success); ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            <?php endif; ?>
 
-            <form method="POST" class="row g-3">
+            <form method="POST" class="row g-3 needs-validation" novalidate>
                 <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                 <input type="hidden" name="action" value="add_unit">
 
                 <div class="col-md-4">
-                    <input type="text" class="form-control" name="code" placeholder="Kode Unit (contoh: SKL001)" required>
+                    <input type="text" class="form-control" name="code" id="code" placeholder="Kode Unit (contoh: SKL001)" required pattern="[A-Z0-9]{3,20}">
+                    <div class="invalid-feedback">Kode 3–20 karakter, huruf besar/angka.</div>
                 </div>
                 <div class="col-md-6">
                     <input type="text" class="form-control" name="name" placeholder="Nama Sekolah/Unit" required>
+                    <div class="invalid-feedback">Nama harus diisi.</div>
                 </div>
                 <div class="col-md-2">
-                    <button type="submit" class="btn w-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <button type="submit" class="btn w-100" id="btnSubmit" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                         Tambah
                     </button>
                 </div>
@@ -164,5 +154,64 @@ $units = db_fetch_all("SELECT * FROM units ORDER BY created_at DESC");
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <?php
+        $fm = get_flash_message();
+        $toastMessage = '';
+        $toastType = 'info';
+        if ($fm) {
+            $toastMessage = $fm['message'] ?? '';
+            $toastType = $fm['type'] ?? 'info';
+        } elseif (!empty($success)) {
+            $toastMessage = $success;
+            $toastType = 'success';
+        } elseif (!empty($error)) {
+            $toastMessage = $error;
+            $toastType = 'danger';
+        }
+        $toastClass = 'text-bg-info';
+        if ($toastType === 'success') $toastClass = 'text-bg-success';
+        elseif ($toastType === 'danger') $toastClass = 'text-bg-danger';
+        elseif ($toastType === 'warning') $toastClass = 'text-bg-warning';
+    ?>
+    <?php if (!empty($toastMessage)): ?>
+        <div class="toast-container position-fixed top-0 end-0 p-3">
+            <div id="mainToast" class="toast align-items-center <?php echo $toastClass; ?> border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
+                <div class="d-flex">
+                    <div class="toast-body"><?php echo escape($toastMessage); ?></div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+    <script>
+        (function () {
+            const form = document.querySelector('form.needs-validation');
+            const btn = document.getElementById('btnSubmit');
+            const code = document.getElementById('code');
+            if (code) {
+                code.addEventListener('input', function () {
+                    code.value = code.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                });
+            }
+            if (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    } else {
+                        if (btn) {
+                            btn.disabled = true;
+                            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Memproses...';
+                        }
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            }
+            const toastEl = document.getElementById('mainToast');
+            if (toastEl && typeof bootstrap !== 'undefined') {
+                new bootstrap.Toast(toastEl).show();
+            }
+        })();
+    </script>
 </body>
 </html>

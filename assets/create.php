@@ -156,21 +156,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <small class="text-white-50">Masukkan rekap aset per bulan untuk setiap unit/sekolah.</small>
                     </div>
                     <div class="card-body">
-                        <?php if ($error): ?>
-                            <div class="alert alert-danger alert-dismissible fade show">
-                                <?php echo escape($error); ?>
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        <?php endif; ?>
-                        
-                        <?php if ($success): ?>
-                            <div class="alert alert-success alert-dismissible fade show">
-                                <?php echo escape($success); ?>
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        <?php endif; ?>
 
-                        <form method="POST">
+                        <form method="POST" class="needs-validation" novalidate>
                             <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
 
                             <div class="mb-3">
@@ -178,12 +165,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <select class="form-select" id="unit_id" name="unit_id" required>
                                     <option value="">-- Pilih Unit / Sekolah --</option>
                                     <?php foreach ($units as $unit): ?>
-                                        <option value="<?php echo $unit['id']; ?>">
+                                        <option value="<?php echo $unit['id']; ?>" <?php echo (isset($_POST['unit_id']) && (int)$_POST['unit_id'] === (int)$unit['id']) ? 'selected' : ''; ?>>
                                             <?php echo escape($unit['name']); ?> (<?php echo escape($unit['code']); ?>)
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
                                 <div class="form-text">Ketik nama sekolah untuk mencari lebih cepat.</div>
+                                <div class="invalid-feedback">Pilih unit/sekolah.</div>
                             </div>
 
                             <div class="mb-3">
@@ -191,17 +179,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <select class="form-select" id="kib" name="kib" required>
                                     <option value="">-- Pilih KIB --</option>
                                     <?php foreach ($kib_types as $k): ?>
-                                        <option value="<?php echo $k; ?>" <?php echo $prefill_kib == $k ? 'selected' : ''; ?>>
+                                        <option value="<?php echo $k; ?>" <?php echo (isset($_POST['kib']) ? ($_POST['kib'] == $k) : ($prefill_kib == $k)) ? 'selected' : ''; ?>>
                                             KIB <?php echo $k; ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
+                                <div class="invalid-feedback">Pilih jenis KIB.</div>
                             </div>
 
                             <div class="mb-3">
                                 <label for="year" class="form-label">Tahun</label>
                                 <input type="number" class="form-control" id="year" name="year" 
-                                       value="<?php echo $prefill_year ?: date('Y'); ?>" min="2020" required>
+                                       value="<?php echo isset($_POST['year']) ? (int)$_POST['year'] : ($prefill_year ?: date('Y')); ?>" min="2020" max="2099" required>
+                                <div class="invalid-feedback">Masukkan tahun antara 2020–2099.</div>
                             </div>
 
                             <div class="mb-3">
@@ -209,20 +199,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <select class="form-select" id="month" name="month" required>
                                     <option value="">-- Pilih Bulan --</option>
                                     <?php foreach ($months as $m => $name): ?>
-                                        <option value="<?php echo $m; ?>" <?php echo $prefill_month == $m ? 'selected' : ''; ?>>
+                                        <option value="<?php echo $m; ?>" <?php echo (isset($_POST['month']) ? ((int)$_POST['month'] === (int)$m) : ($prefill_month == $m)) ? 'selected' : ''; ?>>
                                             <?php echo $name; ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
+                                <div class="invalid-feedback">Pilih bulan.</div>
                             </div>
 
                             <div class="mb-4">
                                 <label for="total" class="form-label">Total Aset</label>
                                 <input type="number" class="form-control" id="total" name="total" 
-                                       min="0" placeholder="Contoh: 1500" required>
+                                       min="0" placeholder="Contoh: 1500" required value="<?php echo isset($_POST['total']) ? (int)$_POST['total'] : ''; ?>">
+                                <div class="invalid-feedback">Masukkan angka minimal 0.</div>
+                                <div class="form-text" id="totalFormatted"></div>
                             </div>
 
-                            <button type="submit" class="btn btn-gradient w-100 py-2">
+                            <button type="submit" class="btn btn-gradient w-100 py-2" id="btnSubmit">
                                 <i class="fas fa-save me-2"></i>Simpan Data Aset
                             </button>
                         </form>
@@ -235,6 +228,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <?php
+        $toastMessage = '';
+        $toastType = 'info';
+        if (!empty($success)) {
+            $toastMessage = $success;
+            $toastType = 'success';
+        } elseif (!empty($error)) {
+            $toastMessage = $error;
+            $toastType = 'danger';
+        }
+        $toastClass = 'text-bg-info';
+        if ($toastType === 'success') $toastClass = 'text-bg-success';
+        elseif ($toastType === 'danger') $toastClass = 'text-bg-danger';
+        elseif ($toastType === 'warning') $toastClass = 'text-bg-warning';
+    ?>
+    <?php if (!empty($toastMessage)): ?>
+        <div class="toast-container position-fixed top-0 end-0 p-3">
+            <div id="mainToast" class="toast align-items-center <?php echo $toastClass; ?> border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
+                <div class="d-flex">
+                    <div class="toast-body"><?php echo escape($toastMessage); ?></div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
     <script>
         $(document).ready(function () {
             $('#unit_id').select2({
@@ -243,6 +261,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 width: '100%'
             });
         });
+        (function () {
+            const form = document.querySelector('form.needs-validation');
+            const btn = document.getElementById('btnSubmit');
+            const total = document.getElementById('total');
+            const totalFormatted = document.getElementById('totalFormatted');
+            if (total && totalFormatted) {
+                const fmt = new Intl.NumberFormat('id-ID');
+                const update = () => {
+                    const v = parseInt(total.value || '0', 10);
+                    totalFormatted.textContent = v ? 'Nilai: Rp ' + fmt.format(v) : '';
+                };
+                total.addEventListener('input', update);
+                update();
+            }
+            if (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    } else {
+                        if (btn) {
+                            btn.disabled = true;
+                            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan...';
+                        }
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            }
+            const toastEl = document.getElementById('mainToast');
+            if (toastEl && typeof bootstrap !== 'undefined') {
+                new bootstrap.Toast(toastEl).show();
+            }
+        })();
     </script>
 </body>
 </html>

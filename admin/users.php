@@ -97,32 +97,27 @@ $roles = db_fetch_all("SELECT * FROM roles");
         <div class="table-container mb-4">
             <h5 class="mb-3"><i class="fas fa-user-plus me-2"></i>Tambah Pengguna Baru</h5>
 
-            <?php if ($error): ?>
-                <div class="alert alert-danger alert-dismissible fade show">
-                    <?php echo escape($error); ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            <?php endif; ?>
             
-            <?php if ($success): ?>
-                <div class="alert alert-success alert-dismissible fade show">
-                    <?php echo escape($success); ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            <?php endif; ?>
 
-            <form method="POST" class="row g-3">
+            <form method="POST" class="row g-3 needs-validation" novalidate>
                 <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                 <input type="hidden" name="action" value="add_user">
 
                 <div class="col-md-3">
                     <input type="text" class="form-control" name="name" placeholder="Nama Lengkap" required>
+                    <div class="invalid-feedback">Nama harus diisi.</div>
                 </div>
                 <div class="col-md-3">
                     <input type="email" class="form-control" name="email" placeholder="Email" required>
+                    <div class="invalid-feedback">Email tidak valid.</div>
                 </div>
                 <div class="col-md-2">
-                    <input type="password" class="form-control" name="password" placeholder="Password" required>
+                    <div class="input-group">
+                        <input type="password" class="form-control" name="password" id="password" placeholder="Password" required minlength="6">
+                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">Tampilkan</button>
+                    </div>
+                    <div class="invalid-feedback">Password minimal 6 karakter.</div>
+                    <div class="form-text" id="pwdStrength"></div>
                 </div>
                 <div class="col-md-2">
                     <select class="form-select" name="role_id" required>
@@ -131,9 +126,10 @@ $roles = db_fetch_all("SELECT * FROM roles");
                             <option value="<?php echo $role['id']; ?>"><?php echo escape($role['name']); ?></option>
                         <?php endforeach; ?>
                     </select>
+                    <div class="invalid-feedback">Pilih role.</div>
                 </div>
                 <div class="col-md-2">
-                    <button type="submit" class="btn w-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <button type="submit" class="btn w-100" id="btnSubmit" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                         Tambah
                     </button>
                 </div>
@@ -189,5 +185,83 @@ $roles = db_fetch_all("SELECT * FROM roles");
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <?php
+        $fm = get_flash_message();
+        $toastMessage = '';
+        $toastType = 'info';
+        if ($fm) {
+            $toastMessage = $fm['message'] ?? '';
+            $toastType = $fm['type'] ?? 'info';
+        } elseif (!empty($success)) {
+            $toastMessage = $success;
+            $toastType = 'success';
+        } elseif (!empty($error)) {
+            $toastMessage = $error;
+            $toastType = 'danger';
+        }
+        $toastClass = 'text-bg-info';
+        if ($toastType === 'success') $toastClass = 'text-bg-success';
+        elseif ($toastType === 'danger') $toastClass = 'text-bg-danger';
+        elseif ($toastType === 'warning') $toastClass = 'text-bg-warning';
+    ?>
+    <?php if (!empty($toastMessage)): ?>
+        <div class="toast-container position-fixed top-0 end-0 p-3">
+            <div id="mainToast" class="toast align-items-center <?php echo $toastClass; ?> border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
+                <div class="d-flex">
+                    <div class="toast-body"><?php echo escape($toastMessage); ?></div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+    <script>
+        (function () {
+            const form = document.querySelector('form.needs-validation');
+            const btn = document.getElementById('btnSubmit');
+            const pwd = document.getElementById('password');
+            const toggle = document.getElementById('togglePassword');
+            const strength = document.getElementById('pwdStrength');
+            if (toggle && pwd) {
+                toggle.addEventListener('click', function () {
+                    const isPwd = pwd.getAttribute('type') === 'password';
+                    pwd.setAttribute('type', isPwd ? 'text' : 'password');
+                    toggle.textContent = isPwd ? 'Sembunyikan' : 'Tampilkan';
+                });
+            }
+            if (pwd && strength) {
+                const updateStrength = () => {
+                    const v = pwd.value || '';
+                    let score = 0;
+                    if (v.length >= 6) score++;
+                    if (/[A-Z]/.test(v)) score++;
+                    if (/[a-z]/.test(v)) score++;
+                    if (/\d/.test(v)) score++;
+                    if (/[^A-Za-z0-9]/.test(v)) score++;
+                    const levels = ['Sangat lemah', 'Lemah', 'Sedang', 'Kuat', 'Sangat kuat'];
+                    strength.textContent = v ? 'Kekuatan: ' + levels[Math.max(0, score - 1)] : '';
+                };
+                pwd.addEventListener('input', updateStrength);
+                updateStrength();
+            }
+            if (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    } else {
+                        if (btn) {
+                            btn.disabled = true;
+                            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Memproses...';
+                        }
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            }
+            const toastEl = document.getElementById('mainToast');
+            if (toastEl && typeof bootstrap !== 'undefined') {
+                new bootstrap.Toast(toastEl).show();
+            }
+        })();
+    </script>
 </body>
 </html>

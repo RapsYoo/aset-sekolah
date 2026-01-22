@@ -89,15 +89,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Edit Data Aset</h5>
                     </div>
                     <div class="card-body">
-                        <?php if ($error): ?>
-                            <div class="alert alert-danger alert-dismissible fade show">
-                                <?php echo escape($error); ?>
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        <?php endif; ?>
-                        
 
-                        <form method="POST">
+                        <form method="POST" class="needs-validation" novalidate>
                             <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
 
                             <div class="mb-3">
@@ -126,11 +119,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <label for="total" class="form-label">Total Aset</label>
                                 <input type="number" class="form-control" id="total" name="total" 
                                        value="<?php echo $asset['total']; ?>" min="0" required>
+                                <div class="invalid-feedback">Masukkan angka minimal 0.</div>
+                                <div class="form-text" id="totalFormatted"></div>
                             </div>
 
                             <div class="d-grid gap-2 d-md-flex justify-content-md-between">
                                 <a href="detail.php?kib=<?php echo $asset['kib_type']; ?>&year=<?php echo $asset['year']; ?>&month=<?php echo $asset['month']; ?>" class="btn btn-secondary">Batal</a>
-                                <button type="submit" class="btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                                <button type="submit" class="btn" id="btnSubmit" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                                     <i class="fas fa-save me-2"></i>Simpan Perubahan
                                 </button>
                             </div>
@@ -142,5 +137,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <?php
+        $toastMessage = '';
+        $toastType = 'info';
+        if (!empty($error)) {
+            $toastMessage = $error;
+            $toastType = 'danger';
+        }
+        $toastClass = 'text-bg-info';
+        if ($toastType === 'success') $toastClass = 'text-bg-success';
+        elseif ($toastType === 'danger') $toastClass = 'text-bg-danger';
+        elseif ($toastType === 'warning') $toastClass = 'text-bg-warning';
+    ?>
+    <?php if (!empty($toastMessage)): ?>
+        <div class="toast-container position-fixed top-0 end-0 p-3">
+            <div id="mainToast" class="toast align-items-center <?php echo $toastClass; ?> border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
+                <div class="d-flex">
+                    <div class="toast-body"><?php echo escape($toastMessage); ?></div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+    <script>
+        (function () {
+            const form = document.querySelector('form.needs-validation');
+            const btn = document.getElementById('btnSubmit');
+            const total = document.getElementById('total');
+            const totalFormatted = document.getElementById('totalFormatted');
+            if (total && totalFormatted) {
+                const fmt = new Intl.NumberFormat('id-ID');
+                const update = () => {
+                    const v = parseInt(total.value || '0', 10);
+                    totalFormatted.textContent = v ? 'Nilai: Rp ' + fmt.format(v) : '';
+                };
+                total.addEventListener('input', update);
+                update();
+            }
+            if (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    } else {
+                        if (btn) {
+                            btn.disabled = true;
+                            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan...';
+                        }
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            }
+            const toastEl = document.getElementById('mainToast');
+            if (toastEl && typeof bootstrap !== 'undefined') {
+                new bootstrap.Toast(toastEl).show();
+            }
+        })();
+    </script>
 </body>
 </html>

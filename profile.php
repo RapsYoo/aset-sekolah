@@ -91,27 +91,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <h5 class="mb-0"><i class="fas fa-user me-2"></i>Profil Saya</h5>
                     </div>
                     <div class="card-body">
-                        <?php if ($error): ?>
-                            <div class="alert alert-danger alert-dismissible fade show">
-                                <?php echo escape($error); ?>
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        <?php endif; ?>
                         
-                        <?php if ($success): ?>
-                            <div class="alert alert-success alert-dismissible fade show">
-                                <?php echo escape($success); ?>
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        <?php endif; ?>
 
-                        <form method="POST">
+                        <form method="POST" class="needs-validation" novalidate>
                             <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
 
                             <div class="mb-3">
                                 <label for="name" class="form-label">Nama</label>
                                 <input type="text" class="form-control" id="name" name="name" 
                                        value="<?php echo escape($user['name']); ?>" required>
+                                <div class="invalid-feedback">Nama harus diisi.</div>
                             </div>
 
                             <div class="mb-3">
@@ -133,14 +122,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                             <div class="mb-3">
                                 <label for="password" class="form-label">Password Baru</label>
-                                <input type="password" class="form-control" id="password" name="password"
-                                       placeholder="Biarkan kosong jika tidak ingin mengubah">
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="password" name="password"
+                                           placeholder="Biarkan kosong jika tidak ingin mengubah" minlength="6">
+                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">Tampilkan</button>
+                                </div>
+                                <div class="invalid-feedback">Minimal 6 karakter.</div>
                                 <small class="text-muted">Minimal 6 karakter</small>
                             </div>
 
                             <div class="d-grid gap-2 d-md-flex justify-content-md-between">
                                 <a href="dashboard.php" class="btn btn-secondary">Batal</a>
-                                <button type="submit" class="btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                                <button type="submit" class="btn" id="btnSubmit" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                                     <i class="fas fa-save me-2"></i>Simpan Perubahan
                                 </button>
                             </div>
@@ -152,5 +145,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <?php
+        $toastMessage = '';
+        $toastType = 'info';
+        if (!empty($success)) {
+            $toastMessage = $success;
+            $toastType = 'success';
+        } elseif (!empty($error)) {
+            $toastMessage = $error;
+            $toastType = 'danger';
+        }
+        $toastClass = 'text-bg-info';
+        if ($toastType === 'success') $toastClass = 'text-bg-success';
+        elseif ($toastType === 'danger') $toastClass = 'text-bg-danger';
+        elseif ($toastType === 'warning') $toastClass = 'text-bg-warning';
+    ?>
+    <?php if (!empty($toastMessage)): ?>
+        <div class="toast-container position-fixed top-0 end-0 p-3">
+            <div id="mainToast" class="toast align-items-center <?php echo $toastClass; ?> border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
+                <div class="d-flex">
+                    <div class="toast-body"><?php echo escape($toastMessage); ?></div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+    <script>
+        (function () {
+            const form = document.querySelector('form.needs-validation');
+            const btn = document.getElementById('btnSubmit');
+            const pwd = document.getElementById('password');
+            const toggle = document.getElementById('togglePassword');
+            if (toggle && pwd) {
+                toggle.addEventListener('click', function () {
+                    const isPwd = pwd.getAttribute('type') === 'password';
+                    pwd.setAttribute('type', isPwd ? 'text' : 'password');
+                    toggle.textContent = isPwd ? 'Sembunyikan' : 'Tampilkan';
+                });
+            }
+            if (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    } else {
+                        if (btn) {
+                            btn.disabled = true;
+                            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan...';
+                        }
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            }
+            const toastEl = document.getElementById('mainToast');
+            if (toastEl && typeof bootstrap !== 'undefined') {
+                new bootstrap.Toast(toastEl).show();
+            }
+        })();
+    </script>
 </body>
 </html>

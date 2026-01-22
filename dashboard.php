@@ -250,6 +250,37 @@ $total_users_count = $total_users['count'] ?? 0;
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <?php
+        $fm = get_flash_message();
+        $toastMessage = '';
+        $toastType = 'info';
+        if ($fm) {
+            $toastMessage = $fm['message'] ?? '';
+            $toastType = $fm['type'] ?? 'info';
+        }
+        $toastClass = 'text-bg-info';
+        if ($toastType === 'success') $toastClass = 'text-bg-success';
+        elseif ($toastType === 'danger') $toastClass = 'text-bg-danger';
+        elseif ($toastType === 'warning') $toastClass = 'text-bg-warning';
+    ?>
+    <?php if (!empty($toastMessage)): ?>
+        <div class="toast-container position-fixed top-0 end-0 p-3">
+            <div id="mainToast" class="toast align-items-center <?php echo $toastClass; ?> border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
+                <div class="d-flex">
+                    <div class="toast-body"><?php echo escape($toastMessage); ?></div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+        <script>
+            (function () {
+                const toastEl = document.getElementById('mainToast');
+                if (toastEl && typeof bootstrap !== 'undefined') {
+                    new bootstrap.Toast(toastEl).show();
+                }
+            })();
+        </script>
+    <?php endif; ?>
     <script>
         const APP_URL = '<?php echo APP_URL; ?>';
         const kibTypes = ['A', 'B', 'C', 'D', 'E', 'F'];

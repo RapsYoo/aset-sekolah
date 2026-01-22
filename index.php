@@ -10,6 +10,7 @@ if (is_logged_in()) {
 
 // Handle login
 $error = '';
+$email = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = sanitize($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
@@ -69,17 +70,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <small>Sekolah</small>
             </div>
             <div class="card-body p-4">
-                <?php if ($error): ?>
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <?php echo escape($error); ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                <?php endif; ?>
+                
 
-                <form method="POST">
+                <form method="POST" class="needs-validation" novalidate>
                     <div class="mb-3">
                         <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
+                        <input type="email" class="form-control" id="email" name="email" required autofocus value="<?php echo escape($email); ?>">
+                        <div class="invalid-feedback">Masukkan email yang valid.</div>
                         <small class="text-muted d-block mt-2">
                             Demo: <strong>admin@sekolah.com</strong> atau <strong>pegawai@sekolah.com</strong>
                         </small>
@@ -87,18 +84,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div class="mb-3">
                         <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="password" name="password" required minlength="6">
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">Tampilkan</button>
+                        </div>
+                        <div class="invalid-feedback">Password minimal 6 karakter.</div>
                         <small class="text-muted d-block mt-2">
                             Demo: <strong>admin123</strong> atau <strong>pegawai123</strong>
                         </small>
                     </div>
 
-                    <button type="submit" class="btn btn-login w-100 text-white">Login</button>
+                    <button type="submit" class="btn btn-login w-100 text-white" id="btnLogin">Login</button>
                 </form>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <?php
+        $fm = get_flash_message();
+        $toastMessage = '';
+        $toastType = 'info';
+        if ($fm) {
+            $toastMessage = $fm['message'] ?? '';
+            $toastType = $fm['type'] ?? 'info';
+        }
+        if (!empty($error) && empty($toastMessage)) {
+            $toastMessage = $error;
+            $toastType = 'danger';
+        }
+        $toastClass = 'text-bg-info';
+        if ($toastType === 'success') $toastClass = 'text-bg-success';
+        elseif ($toastType === 'danger') $toastClass = 'text-bg-danger';
+        elseif ($toastType === 'warning') $toastClass = 'text-bg-warning';
+    ?>
+    <?php if (!empty($toastMessage)): ?>
+        <div class="toast-container position-fixed top-0 end-0 p-3">
+            <div id="mainToast" class="toast align-items-center <?php echo $toastClass; ?> border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
+                <div class="d-flex">
+                    <div class="toast-body"><?php echo escape($toastMessage); ?></div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+    <script>
+        (function () {
+            const form = document.querySelector('form.needs-validation');
+            const btn = document.getElementById('btnLogin');
+            const pwd = document.getElementById('password');
+            const toggle = document.getElementById('togglePassword');
+            if (toggle) {
+                toggle.addEventListener('click', function () {
+                    const isPwd = pwd.getAttribute('type') === 'password';
+                    pwd.setAttribute('type', isPwd ? 'text' : 'password');
+                    toggle.textContent = isPwd ? 'Sembunyikan' : 'Tampilkan';
+                });
+            }
+            if (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    } else {
+                        if (btn) {
+                            btn.disabled = true;
+                            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Memproses...';
+                        }
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            }
+            const toastEl = document.getElementById('mainToast');
+            if (toastEl && typeof bootstrap !== 'undefined') {
+                new bootstrap.Toast(toastEl).show();
+            }
+        })();
+    </script>
 </body>
 </html>
