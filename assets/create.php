@@ -1,6 +1,7 @@
 <?php
 require_once '../inc/auth.php';
 require_once '../inc/helpers.php';
+require_once '../inc/storage.php';
 
 require_login();
 $user = current_user();
@@ -39,12 +40,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bind_param('siiiiii', $kib, $year, $month, $unit_id, $total, $user['id'], $total);
             
             if ($stmt->execute()) {
-                // Redirect ke halaman detail jika ada parameter, atau ke index
+                $uploadMsg = '';
+                if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
+                    $file = $_FILES['file'];
+                    $allowedExt = ['pdf', 'xls', 'xlsx'];
+                    $maxMb = 10;
+                    $sizeOk = ($file['size'] <= $maxMb * 1024 * 1024);
+                    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                    $detected = finfo_file($finfo, $file['tmp_name']);
+                    finfo_close($finfo);
+                    $mime = $detected ?: 'application/octet-stream';
+                    if ($sizeOk && in_array($ext, $allowedExt)) {
+                        $uid = bin2hex(random_bytes(16));
+                        $unitCode = 'general';
+                        $u = db_fetch_one("SELECT code FROM units WHERE id = ?", 'i', [$unit_id]);
+                        if (!empty($u['code'])) $unitCode = $u['code'];
+                        $key = sprintf('documents/%d/%s/%s/%s.%s', (int)$year, $kib, $unitCode, $uid, $ext ?: 'bin');
+                        if (storage_put($key, $file['tmp_name'], $mime)) {
+                            $checkDocs = db_fetch_one("SHOW TABLES LIKE 'documents'");
+                            if ($checkDocs) {
+                                $stmt2 = db_prepare("INSERT INTO documents (unit_id, kib_type, year, month, original_filename, object_key, mime_type, size, uploaded_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                                $stmt2->bind_param('isiisssii', $unit_id, $kib, $year, $month, $file['name'], $key, $mime, $file['size'], $user['id']);
+                                $stmt2->execute();
+                            }
+                            $uploadMsg = ' dan dokumen terunggah';
+                        }
+                    }
+                }
                 if (!empty($prefill_kib) && !empty($prefill_year) && !empty($prefill_month)) {
-                    header("Location: detail.php?kib=$kib&year=$year&month=$month&success=1");
-                    exit();
+                    redirect_with_message("detail.php?kib=$kib&year=$year&month=$month", 'Data aset berhasil disimpan' . $uploadMsg . '!', 'success');
                 } else {
-                    $success = 'Data aset berhasil disimpan!';
+                    $success = 'Data aset berhasil disimpan' . $uploadMsg . '!';
                 }
             } else {
                 $error = 'Gagal menyimpan data: ' . $stmt->error;
@@ -157,7 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                     <div class="card-body">
 
-                        <form method="POST" class="needs-validation" novalidate>
+                        <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
                             <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
 
                             <div class="mb-3">
@@ -214,6 +241,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="invalid-feedback">Masukkan angka minimal 0.</div>
                                 <div class="form-text" id="totalFormatted"></div>
                             </div>
+                            <div class="mb-4">
+                                <label class="form-label">Upload Dokumen (Opsional)</label>
+                                <div id="dz" class="dropzone mb-2" style="border: 2px dashed #667eea; border-radius: 10px; padding: 20px; text-align: center; background: #f8f9ff; color: #444; cursor: pointer;">
+                                    <div>
+                                        <i class="fas fa-cloud-upload-alt me-2"></i>
+                                        <span>Tarik & lepas file PDF/XLS/XLSX ke sini atau klik untuk memilih</span>
+                                    </div>
+                                    <input type="file" name="file" id="fileInput" accept=".pdf,.xlsx,.xls" class="d-none">
+                                </div>
+                                <div id="fileName" class="form-text"></div>
+                                <div class="form-text">Maksimal 10 MB. Tipe: PDF, XLS, XLSX.</div>
+                            </div>
 
                             <button type="submit" class="btn btn-gradient w-100 py-2" id="btnSubmit">
                                 <i class="fas fa-save me-2"></i>Simpan Data Aset
@@ -266,6 +305,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const btn = document.getElementById('btnSubmit');
             const total = document.getElementById('total');
             const totalFormatted = document.getElementById('totalFormatted');
+            const dz = document.getElementById('dz');
+            const input = document.getElementById('fileInput');
+            const fileName = document.getElementById('fileName');
             if (total && totalFormatted) {
                 const fmt = new Intl.NumberFormat('id-ID');
                 const update = () => {
@@ -274,6 +316,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 };
                 total.addEventListener('input', update);
                 update();
+            }
+            if (dz && input) {
+                dz.addEventListener('click', () => input.click());
+                dz.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    dz.style.background = '#eef2ff';
+                });
+                dz.addEventListener('dragleave', () => {
+                    dz.style.background = '#f8f9ff';
+                });
+                dz.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dz.style.background = '#f8f9ff';
+                    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                        input.files = e.dataTransfer.files;
+                        fileName.textContent = e.dataTransfer.files[0].name;
+                    }
+                });
+                input.addEventListener('change', () => {
+                    if (input.files.length > 0) {
+                        fileName.textContent = input.files[0].name;
+                    }
+                });
             }
             if (form) {
                 form.addEventListener('submit', function (event) {

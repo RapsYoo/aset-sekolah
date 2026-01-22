@@ -1,6 +1,7 @@
 <?php
 require_once '../inc/auth.php';
 require_once '../inc/helpers.php';
+require_once '../inc/storage.php';
 
 require_login();
 $user = current_user();
@@ -222,6 +223,48 @@ $success = isset($_GET['success']);
                             </tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="table-container">
+                    <h5 class="mb-3"><i class="fas fa-file-alt me-2"></i>Dokumen Terunggah</h5>
+                    <?php if (count($assets) > 0): ?>
+                        <?php foreach ($assets as $asset): ?>
+                            <?php 
+                                $unitName = $asset['unit_name'] ?? 'N/A';
+                                $unitCode = $asset['unit_code'] ?? 'general';
+                                $docs = storage_list_documents($year, $kib, $unitCode);
+                            ?>
+                            <div class="mb-3">
+                                <h6 class="mb-2">
+                                    <i class="fas fa-school me-2"></i><?php echo escape($unitName); ?>
+                                    <?php if (!empty($unitCode)): ?>
+                                        <small class="text-muted ms-2"><?php echo escape($unitCode); ?></small>
+                                    <?php endif; ?>
+                                </h6>
+                                <?php if (!empty($docs)): ?>
+                                    <div class="list-group">
+                                        <?php foreach ($docs as $doc): ?>
+                                            <a href="download.php?key=<?php echo urlencode($doc['key']); ?>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                                <span>
+                                                    <i class="fas fa-file me-2"></i><?php echo escape($doc['name']); ?>
+                                                </span>
+                                                <small class="text-muted">
+                                                    <?php echo number_format($doc['size'], 0, ',', '.'); ?> B • <?php echo date('d/m/Y H:i', $doc['mtime']); ?>
+                                                </small>
+                                            </a>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="text-muted">Belum ada dokumen untuk sekolah ini.</div>
+                                <?php endif; ?>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="text-muted">Belum ada data sekolah untuk menampilkan dokumen.</div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

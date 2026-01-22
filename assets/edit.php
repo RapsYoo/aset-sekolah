@@ -1,6 +1,7 @@
 <?php
 require_once '../inc/auth.php';
 require_once '../inc/helpers.php';
+require_once '../inc/storage.php';
 
 require_login();
 $user = current_user();
@@ -22,12 +23,23 @@ if (!$asset) {
     exit();
 }
 
+// List dokumen terkait
+$unitCode = $asset['unit_code'] ?? 'general';
+$docs = storage_list_documents($asset['year'], $asset['kib_type'], $unitCode);
+
 // Handle update
 $error = '';
 $success = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
         $error = 'Token CSRF tidak valid';
+    } else if (isset($_POST['delete_key'])) {
+        $key = sanitize($_POST['delete_key'] ?? '');
+        if (!empty($key) && storage_delete($key)) {
+            redirect_with_message("edit.php?id={$asset['id']}", 'Dokumen berhasil dihapus!', 'success');
+        } else {
+            $error = 'Gagal menghapus dokumen';
+        }
     } else {
         $total = (int)($_POST['total'] ?? '');
 
@@ -40,9 +52,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bind_param('ii', $total, $id);
             
             if ($stmt->execute()) {
-                // Redirect ke halaman detail
-                header("Location: detail.php?kib={$asset['kib_type']}&year={$asset['year']}&month={$asset['month']}&success=1");
-                exit();
+                $uploadMsg = '';
+                if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
+                    $file = $_FILES['file'];
+                    $allowedExt = ['pdf', 'xls', 'xlsx'];
+                    $maxMb = 10;
+                    $sizeOk = ($file['size'] <= $maxMb * 1024 * 1024);
+                    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                    $detected = finfo_file($finfo, $file['tmp_name']);
+                    finfo_close($finfo);
+                    $mime = $detected ?: 'application/octet-stream';
+                    if ($sizeOk && in_array($ext, $allowedExt)) {
+                        $uid = bin2hex(random_bytes(16));
+                        $unitCode = $asset['unit_code'] ?? 'general';
+                        $key = sprintf('documents/%d/%s/%s/%s.%s', (int)$asset['year'], $asset['kib_type'], $unitCode, $uid, $ext ?: 'bin');
+                        if (storage_put($key, $file['tmp_name'], $mime)) {
+                            $checkDocs = db_fetch_one("SHOW TABLES LIKE 'documents'");
+                            if ($checkDocs) {
+                                $stmt2 = db_prepare("INSERT INTO documents (unit_id, kib_type, year, month, original_filename, object_key, mime_type, size, uploaded_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                                $stmt2->bind_param('isiisssii', $asset['unit_id'], $asset['kib_type'], $asset['year'], $asset['month'], $file['name'], $key, $mime, $file['size'], $user['id']);
+                                $stmt2->execute();
+                            }
+                            $uploadMsg = ' dan dokumen terunggah';
+                        }
+                    }
+                }
+                redirect_with_message("detail.php?kib={$asset['kib_type']}&year={$asset['year']}&month={$asset['month']}", 'Perubahan berhasil disimpan' . $uploadMsg . '!', 'success');
             } else {
                 $error = 'Gagal memperbarui data: ' . $stmt->error;
             }
@@ -90,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                     <div class="card-body">
 
-                        <form method="POST" class="needs-validation" novalidate>
+                        <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
                             <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
 
                             <div class="mb-3">
@@ -122,6 +158,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="invalid-feedback">Masukkan angka minimal 0.</div>
                                 <div class="form-text" id="totalFormatted"></div>
                             </div>
+                            <div class="mb-3">
+                                <label class="form-label">Upload Dokumen (Opsional)</label>
+                                <div id="dz" class="dropzone mb-2" style="border: 2px dashed #667eea; border-radius: 10px; padding: 20px; text-align: center; background: #f8f9ff; color: #444; cursor: pointer;">
+                                    <div>
+                                        <i class="fas fa-cloud-upload-alt me-2"></i>
+                                        <span>Tarik & lepas file PDF/XLS/XLSX ke sini atau klik untuk memilih</span>
+                                    </div>
+                                    <input type="file" name="file" id="fileInput" accept=".pdf,.xlsx,.xls" class="d-none">
+                                </div>
+                                <div id="fileName" class="form-text"></div>
+                                <div class="form-text">Maksimal 10 MB. Tipe: PDF, XLS, XLSX.</div>
+                            </div>
 
                             <div class="d-grid gap-2 d-md-flex justify-content-md-between">
                                 <a href="detail.php?kib=<?php echo $asset['kib_type']; ?>&year=<?php echo $asset['year']; ?>&month=<?php echo $asset['month']; ?>" class="btn btn-secondary">Batal</a>
@@ -130,6 +178,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </button>
                             </div>
                         </form>
+                        <hr class="my-4">
+                        <h6 class="mb-2"><i class="fas fa-file-alt me-2"></i>Dokumen Terkait</h6>
+                        <?php if (!empty($docs)): ?>
+                            <div class="list-group">
+                                <?php foreach ($docs as $doc): ?>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <a href="download.php?key=<?php echo urlencode($doc['key']); ?>" class="text-decoration-none">
+                                                <i class="fas fa-file me-2"></i><?php echo escape($doc['name']); ?>
+                                            </a>
+                                            <small class="text-muted ms-2"><?php echo number_format($doc['size'], 0, ',', '.'); ?> B • <?php echo date('d/m/Y H:i', $doc['mtime']); ?></small>
+                                        </div>
+                                        <form method="POST" class="d-inline">
+                                            <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+                                            <input type="hidden" name="delete_key" value="<?php echo escape($doc['key']); ?>">
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Hapus dokumen ini?')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php else: ?>
+                            <div class="text-muted">Belum ada dokumen untuk data ini.</div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -138,9 +211,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <?php
+        $fm = get_flash_message();
         $toastMessage = '';
         $toastType = 'info';
-        if (!empty($error)) {
+        if ($fm) {
+            $toastMessage = $fm['message'] ?? '';
+            $toastType = $fm['type'] ?? 'info';
+        } elseif (!empty($error)) {
             $toastMessage = $error;
             $toastType = 'danger';
         }
@@ -165,6 +242,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const btn = document.getElementById('btnSubmit');
             const total = document.getElementById('total');
             const totalFormatted = document.getElementById('totalFormatted');
+            const dz = document.getElementById('dz');
+            const input = document.getElementById('fileInput');
+            const fileName = document.getElementById('fileName');
             if (total && totalFormatted) {
                 const fmt = new Intl.NumberFormat('id-ID');
                 const update = () => {
@@ -173,6 +253,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 };
                 total.addEventListener('input', update);
                 update();
+            }
+            if (dz && input) {
+                dz.addEventListener('click', () => input.click());
+                dz.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    dz.style.background = '#eef2ff';
+                });
+                dz.addEventListener('dragleave', () => {
+                    dz.style.background = '#f8f9ff';
+                });
+                dz.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dz.style.background = '#f8f9ff';
+                    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                        input.files = e.dataTransfer.files;
+                        fileName.textContent = e.dataTransfer.files[0].name;
+                    }
+                });
+                input.addEventListener('change', () => {
+                    if (input.files.length > 0) {
+                        fileName.textContent = input.files[0].name;
+                    }
+                });
             }
             if (form) {
                 form.addEventListener('submit', function (event) {

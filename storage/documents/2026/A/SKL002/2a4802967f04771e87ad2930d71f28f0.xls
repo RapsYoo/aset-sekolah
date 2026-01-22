@@ -1,0 +1,131 @@
+
+<div id="content">
+    <div class="scroll">
+    <table width='100%' style='font-size:13px;' border='0'>
+                <tr>
+                    <td colspan='15' align='center'>
+                        <b style='font-size:15px;'>SULAWESI SELATAN</b> <b style='font-size:15px;'> <br> KARTU INVENTARIS BARANG KIB A <br> TANAH</b><br><b>INTRAKOMPTABEL</b><br>&nbsp;
+                    </td> 
+                </tr>
+                <tr>
+                  <td width='15%'>Provinsi</td>
+                  <td width='85%'>: SULAWESI SELATAN</td> 
+                </tr><tr>
+                <td>Unit Organisasi</td>
+                <td>: DINAS PENDIDIKAN</td> 
+              </tr><tr>
+                <td>Sub Unit Organisasi</td>
+                <td>: DINAS PENDIDIKAN</td> 
+              </tr><tr>
+                  <td>No.Kode Lokasi</td>
+                  <td>: 11.27.00.08.01.15.09</td> 
+                </tr>
+              </table>
+              <table style='border-collapse:collapse;' width='100%' align='center' border='1' cellspacing='1' cellpadding='1'>
+            <thead>
+            <tr>
+                <td align='left' colspan='15' style='font-size:13px;border: solid 1px white;border-bottom:solid 1px black;'>&ensp;</td>
+            </tr>
+            </thead>
+            <tr>
+                <td align='center' rowspan='3' style='font-size:13px'>No</td><td align='center' rowspan='3' style='font-size:13px'>Jenis Barang/<br>Nama Barang</td>
+                    <td align='center' colspan='2' style='font-size:13px'>Nomor</td>
+                <td align='center' rowspan='3' style='font-size:13px'>Luas(m2)</td>
+                <td align='center' rowspan='3' style='font-size:13px'>Tahun</td>
+                <td align='center' rowspan='3' style='font-size:13px'>Letak / Alamat</td>
+                <td align='center' rowspan='3' style='font-size:13px'>Kab / Kota</td>
+                <td align='center' colspan='3' style='font-size:13px'>Status Tanah</td>
+                <td align='center' rowspan='3' style='font-size:13px'>Penggunaan</td>
+                <td align='center' rowspan='3' style='font-size:13px'>Asal Usul</td>
+                <td align='center' rowspan='3' style='font-size:13px'>Harga</td>
+                <td align='center' rowspan='3' style='font-size:13px'>Keterangan</td>
+            </tr>
+            <tr><td align='center' rowspan='2' style='font-size:13px'>Kode Barang</td><td align='center' rowspan='2' style='font-size:13px'>Register</td>
+                <td align='center' rowspan='2' style='font-size:13px'>Hak</td>
+                <td align='center' colspan='2' style='font-size:13px'>Sertifikat</td>
+            </tr>
+            <tr>
+                <td align='center' style='font-size:13px'>Tanggal</td>
+                <td align='center' style='font-size:13px'>Nomor</td>
+            </tr><tr>
+                  <td align='center' bgcolor='#a2c8fb' width ='2%' style='font-size:10px'>1</td>
+                  <td align='center' bgcolor='#a2c8fb' width ='15%' style='font-size:10px'>2</td>
+                  <td align='center' bgcolor='#a2c8fb' width ='5%' style='font-size:10px'>3</td>
+                  <td align='center' bgcolor='#a2c8fb' width ='5%' style='font-size:10px'>4</td>
+                  <td align='center' bgcolor='#a2c8fb' width ='3%' style='font-size:10px'>5</td>
+                  <td align='center' bgcolor='#a2c8fb' width ='5%' style='font-size:10px'>6</td>
+                  <td align='center' bgcolor='#a2c8fb' width ='15%' style='font-size:10px'>7</td>
+                  <td align='center' bgcolor='#a2c8fb' width ='15%' style='font-size:10px'>8</td>
+                  <td align='center' bgcolor='#a2c8fb' width ='5%' style='font-size:10px'>9</td>
+                  <td align='center' bgcolor='#a2c8fb' width ='5%' style='font-size:10px'>10</td>
+                  <td align='center' bgcolor='#a2c8fb' width ='5%' style='font-size:10px'>11</td>
+                  <td align='center' bgcolor='#a2c8fb' width ='10%' style='font-size:10px'>12</td>
+                  <td align='center' bgcolor='#a2c8fb' width ='5%' style='font-size:10px'>13</td>
+                  <td align='center' bgcolor='#a2c8fb' width ='5%' style='font-size:10px'>14</td>
+                  <td align='center' bgcolor='#a2c8fb' width ='15%' style='font-size:10px'>15</td>
+            </tr><tr>
+                    <td valign='top' align='center' width ='2%' style='font-size:11px'>1</td>
+                    <td valign='top' align='left' width ='15%' style='font-size:11px'>Tanah Bangunan Pendidikan Dan Latihan</td>
+                    <td valign='top' align='left' width ='5%' style='font-size:11px'>1.3.1.01.01.04.002</td>
+                    <td valign='top' align='center' width ='5%' style='font-size:11px'>000002</td>
+                    <td valign='top' align='center' width ='3%' style='font-size:11px'>0.00</td>
+                    <td valign='top' align='center' width ='5%' style='font-size:11px'>2005</td>
+                    <td valign='top' align='left' width ='15%' style='font-size:11px'>SLBN 1 PAREPARE - Jl. Melingkar No. 42 </td>
+                    <td valign='top' align='left' width ='15%' style='font-size:11px'>Kota Parepare</td>
+                    <td valign='top' align='left' width ='5%' style='font-size:11px'></td>
+                    <td valign='top' align='left' width ='5%' style='font-size:11px'>0000-00-00</td>
+                    <td valign='top' align='left' width ='5%' style='font-size:11px'></td>
+                    <td valign='top' align='left' width ='10%' style='font-size:11px'></td>
+                    <td valign='top' align='left' width ='5%' style='font-size:11px'>Pembelian</td>
+                    <td valign='top' align='right' width ='5%' style='font-size:11px'>60,000,000.00</td>
+                    <td valign='top' align='left' width ='15%' style='font-size:11px'> Berdasarkan LHP BPK Nomor 50B/LHP/XIX/MKS/05/2022</td>  
+                  </tr><tr>
+                    <td colspan='13' bgcolor='#fce5e7' valign='top' align='center' width ='2%' style='font-size:13px'>Jumlah</td>
+                    <td valign='top' bgcolor='#fce5e7' align='center' width ='2%' style='font-size:11px'>60,000,000.00</td>
+                    <td bgcolor='#fce5e7' valign='top' align='center' width ='2%' style='font-size:11px'></td>
+                  </tr>
+                </table><table style='border-collapse:collapse;' width='100%' align='center' border='0' cellspacing='1' cellpadding='1'>
+                   <tr>
+                     <td><td>
+                     <td align='center' colspan='7' style='font-size:10px'></td>
+                  </tr>
+                   <br/><br/>
+                   <tr>
+                    <td><td>
+                    <td colspan='5'></td>
+                     <td align='center' style='font-size:11px'>MAKASSAR, 13 Januari 26</td>
+                   </tr>
+                   <tr>
+                    <td><td>
+                     <td align='center' style='font-size:11px'>&ensp;&ensp;&ensp;&ensp;MENGETAHUI</td>
+                     <td colspan='2'></td>
+                   <td colspan='3'></td>
+                   </tr>
+                   <Tr></Tr><Tr></Tr>
+                   <tr>
+                     <td><td>
+                     <td align='center' style='font-size:11px'>&ensp;&ensp;&ensp;&ensp;KEPALA SLBN 1 PAREPARE DINAS PENDIDIKAN</td>
+                    <td colspan='2'></td>
+                     <td colspan='2'></td>
+                   <td align='center' style='font-size:11px'>PENGURUS BARANG</td>      
+                   </tr>
+                   <tr>
+                     <td><td>
+                    <td align='center' colspan='7' style='font-size:11px' height='50'></td>
+                   </tr>
+                   <tr>
+                    <td><td>
+                    <td align='center' style='font-size:11px'>&ensp;&ensp;&ensp;&ensp;(<u>  </u>)</td>
+                     <td colspan='2'></td>
+                     <td colspan='2'></td>
+                    <td align='center' style='font-size:11px'>(<u>  </u>)</td>
+                  </tr>
+                   <tr>
+                     <td><td>
+                     <td align='center' style='font-size:11px'>&ensp;&ensp;&ensp;&ensp;&ensp;NIP. </td>
+                    <td colspan='2'></td>
+                    <td colspan='2'></td>
+                    <td align='center' style='font-size:11px'>&ensp;NIP. </td>
+                   </tr>
+                 </table>    </div>
+</div>
