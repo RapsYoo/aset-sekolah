@@ -165,6 +165,25 @@ ALTER TABLE `users`
   ADD UNIQUE KEY `email` (`email`),
   ADD KEY `role_id` (`role_id`);
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `items`
+--
+
+CREATE TABLE `items` (
+  `id` int NOT NULL,
+  `unit_id` int NOT NULL,
+  `item_name` varchar(255) NOT NULL,
+  `condition` enum('layak_pakai','tidak_layak_pakai') NOT NULL,
+  `photo_key` varchar(255) DEFAULT NULL,
+  `photo_mime` varchar(100) DEFAULT NULL,
+  `photo_size` int DEFAULT NULL,
+  `created_by` int NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 --
 -- AUTO_INCREMENT for dumped tables
 --
@@ -194,6 +213,12 @@ ALTER TABLE `users`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT for table `items`
+--
+ALTER TABLE `items`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- Constraints for dumped tables
 --
 
@@ -203,6 +228,19 @@ ALTER TABLE `users`
 ALTER TABLE `assets_monthly`
   ADD CONSTRAINT `assets_monthly_ibfk_1` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `assets_monthly_ibfk_2` FOREIGN KEY (`unit_id`) REFERENCES `units` (`id`) ON DELETE CASCADE;
+
+--
+-- Indexes and Constraints for table `items`
+--
+ALTER TABLE `items`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_unit_id` (`unit_id`),
+  ADD KEY `idx_condition` (`condition`),
+  ADD KEY `idx_created_by` (`created_by`),
+  ADD KEY `idx_photo_key` (`photo_key`);
+ALTER TABLE `items`
+  ADD CONSTRAINT `items_ibfk_unit` FOREIGN KEY (`unit_id`) REFERENCES `units` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `items_ibfk_user` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `users`

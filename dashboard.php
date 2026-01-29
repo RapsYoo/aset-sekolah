@@ -135,6 +135,11 @@ $total_users_count = $total_users['count'] ?? 0;
                                 <i class="fas fa-list me-2"></i>Data Aset
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="items/index.php">
+                                <i class="fas fa-box-open me-2"></i>Kelola Barang
+                            </a>
+                        </li>
                         <?php if (is_admin()): ?>
                             <li class="nav-item">
                                 <a class="nav-link" href="admin/units.php">

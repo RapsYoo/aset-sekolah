@@ -1,84 +1,207 @@
--- Hapus database jika sudah ada (opsional)
-DROP DATABASE IF EXISTS aset_sekolah;
-CREATE DATABASE aset_sekolah;
-USE aset_sekolah;
+-- phpMyAdmin SQL Dump
+-- version 5.2.x
+-- https://www.phpmyadmin.net/
+--
+-- Host: localhost
+-- Generation Time: 2026-01-29
+-- Server version: 8.0.x
+-- PHP Version: 8.1.x
 
--- Tabel roles
-CREATE TABLE roles (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(50) UNIQUE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
 
--- Tabel units (Sekolah/Unit)
-CREATE TABLE units (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    code VARCHAR(20) UNIQUE NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
 
--- Tabel users
-CREATE TABLE users (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    role_id INT NOT NULL,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
-);
+-- --------------------------------------------------------
+-- Database: `aset_sekolah`
+-- (Pastikan Anda mengimpor ke database bernama aset_sekolah)
+-- --------------------------------------------------------
 
-CREATE TABLE assets_monthly (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    kib_type ENUM('A', 'B', 'C', 'D', 'E', 'F') NOT NULL,
-    year INT NOT NULL,
-    month INT NOT NULL,
-    unit_id INT NOT NULL,
-    total INT NOT NULL,
-    created_by INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE KEY unique_kib_month_unit (kib_type, year, month, unit_id),
-    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (unit_id) REFERENCES units(id) ON DELETE CASCADE,
-    INDEX idx_kib_year (kib_type, year),
-    INDEX idx_month (month)
-);
+-- --------------------------------------------------------
+-- Table structure for table `roles`
+-- --------------------------------------------------------
+DROP TABLE IF EXISTS `roles`;
+CREATE TABLE `roles` (
+  `id` int NOT NULL,
+  `name` varchar(50) NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Insert default roles
-INSERT INTO roles (name) VALUES ('admin'), ('pegawai');
+INSERT INTO `roles` (`id`, `name`, `created_at`) VALUES
+(1, 'admin', CURRENT_TIMESTAMP),
+(2, 'pegawai', CURRENT_TIMESTAMP);
 
--- Insert default units
-INSERT INTO units (code, name) VALUES 
-('SKL001', 'Sekolah Dasar Negeri 1'),
-('SKL002', 'Sekolah Dasar Negeri 2'),
-('SKL003', 'Sekolah Menengah Pertama 1');
+-- --------------------------------------------------------
+-- Table structure for table `units`
+-- --------------------------------------------------------
+DROP TABLE IF EXISTS `units`;
+CREATE TABLE `units` (
+  `id` int NOT NULL,
+  `code` varchar(20) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Insert default admin user (password: admin123)
--- Hash di-generate dengan: password_hash('admin123', PASSWORD_DEFAULT)
-INSERT INTO users (name, email, password_hash, role_id) 
-VALUES ('Admin Sekolah', 'admin@sekolah.com', '$2y$10$/L5h5spu7gFkMJjFiVN0JeM94nKVhlC.hNgg2X0GzCEUExMDcJrqK', 1);
+INSERT INTO `units` (`id`, `code`, `name`, `created_at`, `updated_at`) VALUES
+(1, 'SKL001', 'Sekolah Dasar Negeri 1', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(2, 'SKL002', 'Sekolah Dasar Negeri 2', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(3, 'SKL003', 'Sekolah Menengah Pertama 1', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
--- Insert sample pegawai user (password: pegawai123)
--- Hash di-generate dengan: password_hash('pegawai123', PASSWORD_DEFAULT)
-INSERT INTO users (name, email, password_hash, role_id) 
-VALUES ('Pegawai Sekolah', 'pegawai@sekolah.com', '$2y$10$BgiCs2/Vyv9Hj3GPXO64xuJQqSrPHOS96PgXskWcmTq8BJ2XjLbFW', 2);
+-- --------------------------------------------------------
+-- Table structure for table `users`
+-- --------------------------------------------------------
+DROP TABLE IF EXISTS `users`;
+CREATE TABLE `users` (
+  `id` int NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `password_hash` varchar(255) NOT NULL,
+  `role_id` int NOT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-INSERT INTO assets_monthly (kib_type, year, month, unit_id, total, created_by) VALUES
-('A', 2025, 1, 1, 150, 1),
-('A', 2025, 2, 1, 155, 1),
-('A', 2025, 3, 1, 160, 1),
-('A', 2025, 4, 1, 165, 1),
-('A', 2025, 5, 1, 170, 1),
-('A', 2025, 6, 1, 175, 1),
-('B', 2025, 1, 1, 100, 1),
-('B', 2025, 2, 1, 105, 1),
-('B', 2025, 3, 1, 110, 1),
-('C', 2025, 1, 1, 200, 1),
-('C', 2025, 2, 1, 205, 1),
-('C', 2025, 3, 1, 210, 1);
+INSERT INTO `users` (`id`, `name`, `email`, `password_hash`, `role_id`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'Admin', 'admin@sekolah.com', '$2y$10$8xI/6T6bYZx5i1Z4zwSVhefy7qRgVQLcguXAwJUDuoXTyymJ7LNNu', 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(2, 'Pegawai', 'pegawai@sekolah.com', '$2y$10$gKor3vI2ASr1o6t5C4f0AeUiGz6wxrR03vjfv6Fpazbp5qbGTPkQq', 2, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
+-- --------------------------------------------------------
+-- Table structure for table `assets_monthly`
+-- --------------------------------------------------------
+DROP TABLE IF EXISTS `assets_monthly`;
+CREATE TABLE `assets_monthly` (
+  `id` int NOT NULL,
+  `kib_type` enum('A','B','C','D','E','F') NOT NULL,
+  `year` int NOT NULL,
+  `month` int NOT NULL,
+  `unit_id` int NOT NULL,
+  `total` int NOT NULL,
+  `created_by` int NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+INSERT INTO `assets_monthly` (`id`, `kib_type`, `year`, `month`, `unit_id`, `total`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 'A', YEAR(CURRENT_DATE), 1, 1, 150, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(2, 'A', YEAR(CURRENT_DATE), 2, 1, 155, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(3, 'B', YEAR(CURRENT_DATE), 1, 1, 100, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(4, 'C', YEAR(CURRENT_DATE), 1, 1, 200, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+-- --------------------------------------------------------
+-- Table structure for table `items`
+-- --------------------------------------------------------
+DROP TABLE IF EXISTS `items`;
+CREATE TABLE `items` (
+  `id` int NOT NULL,
+  `unit_id` int NOT NULL,
+  `item_name` varchar(255) NOT NULL,
+  `condition` enum('layak_pakai','tidak_layak_pakai') NOT NULL,
+  `photo_key` varchar(255) DEFAULT NULL,
+  `photo_mime` varchar(100) DEFAULT NULL,
+  `photo_size` int DEFAULT NULL,
+  `created_by` int NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+-- Table structure for table `documents` (opsional untuk unggahan dokumen)
+-- --------------------------------------------------------
+DROP TABLE IF EXISTS `documents`;
+CREATE TABLE `documents` (
+  `id` int NOT NULL,
+  `unit_id` int NOT NULL,
+  `kib_type` enum('A','B','C','D','E','F') NOT NULL,
+  `year` int NOT NULL,
+  `month` int NOT NULL,
+  `original_filename` varchar(255) NOT NULL,
+  `object_key` varchar(255) NOT NULL,
+  `mime_type` varchar(100) NOT NULL,
+  `size` int NOT NULL,
+  `uploaded_by` int NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+-- Indexes
+-- --------------------------------------------------------
+ALTER TABLE `assets_monthly`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_kib_month_unit` (`kib_type`,`year`,`month`,`unit_id`),
+  ADD KEY `created_by` (`created_by`),
+  ADD KEY `unit_id` (`unit_id`),
+  ADD KEY `idx_kib_year` (`kib_type`,`year`),
+  ADD KEY `idx_month` (`month`);
+
+ALTER TABLE `roles`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `name` (`name`);
+
+ALTER TABLE `units`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `code` (`code`);
+
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `email` (`email`),
+  ADD KEY `role_id` (`role_id`);
+
+ALTER TABLE `items`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_unit_id` (`unit_id`),
+  ADD KEY `idx_condition` (`condition`),
+  ADD KEY `idx_created_by` (`created_by`),
+  ADD KEY `idx_photo_key` (`photo_key`);
+
+ALTER TABLE `documents`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_unit_id` (`unit_id`),
+  ADD KEY `idx_kib_year_month` (`kib_type`,`year`,`month`),
+  ADD KEY `idx_object_key` (`object_key`),
+  ADD KEY `idx_uploaded_by` (`uploaded_by`);
+
+-- --------------------------------------------------------
+-- AUTO_INCREMENT
+-- --------------------------------------------------------
+ALTER TABLE `assets_monthly`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1001;
+ALTER TABLE `roles`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+ALTER TABLE `units`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+ALTER TABLE `users`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+ALTER TABLE `items`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
+ALTER TABLE `documents`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
+
+-- --------------------------------------------------------
+-- Constraints
+-- --------------------------------------------------------
+ALTER TABLE `assets_monthly`
+  ADD CONSTRAINT `assets_monthly_ibfk_1` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `assets_monthly_ibfk_2` FOREIGN KEY (`unit_id`) REFERENCES `units` (`id`) ON DELETE CASCADE;
+
+ALTER TABLE `users`
+  ADD CONSTRAINT `users_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE;
+
+ALTER TABLE `items`
+  ADD CONSTRAINT `items_ibfk_unit` FOREIGN KEY (`unit_id`) REFERENCES `units` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `items_ibfk_user` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+ALTER TABLE `documents`
+  ADD CONSTRAINT `documents_ibfk_unit` FOREIGN KEY (`unit_id`) REFERENCES `units` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `documents_ibfk_user` FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

@@ -49,6 +49,16 @@ function get_kib_types() {
 }
 
 /**
+ * Kondisi barang
+ */
+function get_item_conditions() {
+    return [
+        'layak_pakai' => 'Layak Pakai',
+        'tidak_layak_pakai' => 'Tidak Layak Pakai'
+    ];
+}
+
+/**
  * Ambil semua units (sekolah)
  */
 function get_units() {
