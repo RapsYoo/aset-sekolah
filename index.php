@@ -32,70 +32,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Sistem Monitoring Aset Sekolah</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-        }
-        .login-container {
-            width: 100%;
-            max-width: 400px;
-        }
-        .card {
-            border: none;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-        }
-        .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 2rem 1rem;
-        }
-        .btn-login {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-        }
-        .btn-login:hover {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="<?php echo APP_URL; ?>/public/css/style.css?v=<?php echo time(); ?>">
 </head>
 <body>
-    <div class="login-container mx-auto">
-        <div class="card">
-            <div class="card-header text-center">
-                <h3 class="mb-0">Sistem Monitoring Aset</h3>
-                <small>Sekolah</small>
-            </div>
-            <div class="card-body p-4">
-                
+    <div class="login-bg">
+        <div class="login-card">
+            <div class="login-left d-flex flex-column justify-content-center">
+                <div class="mb-5">
+                    <h3 class="fw-bold text-primary">Selamat Datang</h3>
+                    <p class="text-muted">Silakan login untuk mengakses sistem monitoring.</p>
+                </div>
 
                 <form method="POST" class="needs-validation" novalidate>
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" required autofocus value="<?php echo escape($email); ?>">
-                        <div class="invalid-feedback">Masukkan email yang valid.</div>
-                        <small class="text-muted d-block mt-2">
-                            Demo: <strong>admin@sekolah.com</strong> atau <strong>pegawai@sekolah.com</strong>
-                        </small>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
+                    <div class="mb-4">
+                        <label for="email" class="form-label text-muted text-uppercase small fw-bold">Email Address</label>
                         <div class="input-group">
-                            <input type="password" class="form-control" id="password" name="password" required minlength="6">
-                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">Tampilkan</button>
+                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-envelope text-muted"></i></span>
+                            <input type="email" class="form-control border-start-0 ps-0 bg-light" id="email" name="email"
+                                   required autofocus value="<?php echo escape($email); ?>" placeholder="name@school.com">
+                            <div class="invalid-feedback">Masukkan email yang valid.</div>
                         </div>
-                        <div class="invalid-feedback">Password minimal 6 karakter.</div>
-                        <small class="text-muted d-block mt-2">
-                            Demo: <strong>admin123</strong> atau <strong>pegawai123</strong>
-                        </small>
                     </div>
 
-                    <button type="submit" class="btn btn-login w-100 text-white" id="btnLogin">Login</button>
+                    <div class="mb-4">
+                        <label for="password" class="form-label text-muted text-uppercase small fw-bold">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-lock text-muted"></i></span>
+                            <input type="password" class="form-control border-start-0 ps-0 bg-light" id="password" name="password"
+                                   required minlength="6" placeholder="******">
+                            <button class="btn btn-outline-secondary border-start-0 bg-light" type="button" id="togglePassword">
+                                <i class="fas fa-eye text-muted"></i>
+                            </button>
+                            <div class="invalid-feedback">Password minimal 6 karakter.</div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid mb-4">
+                        <button type="submit" class="btn btn-primary py-2 fw-bold shadow-sm" id="btnLogin">
+                            LOGIN
+                        </button>
+                    </div>
+
+                    <div class="alert alert-light border-0 small text-muted text-center">
+                        <i class="fas fa-info-circle me-1"></i> Demo: <strong>admin@sekolah.com</strong> / <strong>admin123</strong>
+                    </div>
                 </form>
+            </div>
+
+            <div class="login-right d-none d-md-flex">
+                <div class="login-right-content">
+                    <div class="mb-4">
+                        <i class="fas fa-chart-line fa-3x"></i>
+                    </div>
+                    <h2 class="fw-bold">Sistem Monitoring Aset</h2>
+                    <p class="lead mb-0">Kelola dan pantau aset sekolah dengan mudah, cepat, dan akurat.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -127,6 +119,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </div>
         </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const toastEl = document.getElementById('mainToast');
+                if (toastEl && typeof bootstrap !== 'undefined') {
+                    new bootstrap.Toast(toastEl).show();
+                }
+            });
+        </script>
     <?php endif; ?>
     <script>
         (function () {
@@ -134,11 +134,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const btn = document.getElementById('btnLogin');
             const pwd = document.getElementById('password');
             const toggle = document.getElementById('togglePassword');
+
             if (toggle) {
                 toggle.addEventListener('click', function () {
                     const isPwd = pwd.getAttribute('type') === 'password';
                     pwd.setAttribute('type', isPwd ? 'text' : 'password');
-                    toggle.textContent = isPwd ? 'Sembunyikan' : 'Tampilkan';
+                    toggle.innerHTML = isPwd ? '<i class="fas fa-eye-slash text-muted"></i>' : '<i class="fas fa-eye text-muted"></i>';
                 });
             }
             if (form) {
@@ -154,10 +155,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     form.classList.add('was-validated');
                 }, false);
-            }
-            const toastEl = document.getElementById('mainToast');
-            if (toastEl && typeof bootstrap !== 'undefined') {
-                new bootstrap.Toast(toastEl).show();
             }
         })();
     </script>
