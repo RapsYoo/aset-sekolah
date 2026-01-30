@@ -85,176 +85,217 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
-
-$page_title = 'Edit Aset';
-require_once '../inc/header.php';
 ?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Aset - Sistem Monitoring Aset Sekolah</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+        }
+        .navbar {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="../dashboard.php">
+                <i class="fas fa-chart-bar me-2"></i>Monitoring Aset Sekolah
+            </a>
+            <a class="nav-link text-white" href="detail.php?kib=<?php echo $asset['kib_type']; ?>&year=<?php echo $asset['year']; ?>&month=<?php echo $asset['month']; ?>">
+                <i class="fas fa-arrow-left me-2"></i>Kembali
+            </a>
+        </div>
+    </nav>
 
-<div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-        <div class="card shadow-sm">
-            <div class="card-header bg-warning text-dark bg-opacity-10 border-warning">
-                <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Edit Data Aset</h5>
-            </div>
-            <div class="card-body p-4">
-
-                <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
-                    <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
-
-                    <div class="mb-3">
-                        <label class="form-label text-muted small text-uppercase fw-bold">Sekolah</label>
-                        <input type="text" class="form-control bg-light"
-                               value="<?php echo escape($asset['unit_name'] ?? 'N/A'); ?> (<?php echo escape($asset['unit_code'] ?? ''); ?>)"
-                               disabled>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                        <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Edit Data Aset</h5>
                     </div>
+                    <div class="card-body">
 
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label text-muted small text-uppercase fw-bold">Jenis KIB</label>
-                            <input type="text" class="form-control bg-light" value="KIB <?php echo escape($asset['kib_type']); ?>" disabled>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label text-muted small text-uppercase fw-bold">Bulan</label>
-                            <input type="text" class="form-control bg-light" value="<?php echo get_month_name($asset['month']); ?>" disabled>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label text-muted small text-uppercase fw-bold">Tahun</label>
-                            <input type="text" class="form-control bg-light" value="<?php echo $asset['year']; ?>" disabled>
-                        </div>
-                    </div>
+                        <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                            <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
 
-                    <div class="mb-4">
-                        <label for="total" class="form-label fw-bold">Total Aset</label>
-                        <div class="input-group">
-                            <span class="input-group-text">Rp</span>
-                            <input type="number" class="form-control form-control-lg fw-bold text-primary" id="total" name="total"
-                                   value="<?php echo $asset['total']; ?>" min="0" required>
-                        </div>
-                        <div class="invalid-feedback">Masukkan angka minimal 0.</div>
-                        <div class="form-text text-primary fw-bold" id="totalFormatted"></div>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label">Upload Dokumen Tambahan (Opsional)</label>
-                        <div id="dz" class="p-4 text-center border border-2 border-dashed rounded bg-light" style="cursor: pointer; border-color: #dee2e6;">
-                            <div class="mb-2">
-                                <i class="fas fa-cloud-upload-alt fa-2x text-primary opacity-50"></i>
+                            <div class="mb-3">
+                                <label class="form-label">Sekolah</label>
+                                <input type="text" class="form-control" 
+                                       value="<?php echo escape($asset['unit_name'] ?? 'N/A'); ?> (<?php echo escape($asset['unit_code'] ?? ''); ?>)" 
+                                       disabled>
                             </div>
-                            <span class="text-muted">Klik atau tarik file ke sini</span>
-                            <input type="file" name="file" id="fileInput" accept=".pdf,.xlsx,.xls" class="d-none">
-                        </div>
-                        <div id="fileName" class="form-text text-success fw-bold mt-2"></div>
-                        <div class="form-text">Maksimal 10 MB. Tipe: PDF, XLS, XLSX.</div>
-                    </div>
 
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-between align-items-center">
-                        <a href="detail.php?kib=<?php echo $asset['kib_type']; ?>&year=<?php echo $asset['year']; ?>&month=<?php echo $asset['month']; ?>" class="btn btn-light text-muted">Batal</a>
-                        <button type="submit" class="btn btn-warning px-4" id="btnSubmit">
-                            <i class="fas fa-save me-2"></i>Simpan Perubahan
-                        </button>
-                    </div>
-                </form>
+                            <div class="mb-3">
+                                <label class="form-label">Jenis KIB</label>
+                                <input type="text" class="form-control" value="KIB <?php echo escape($asset['kib_type']); ?>" disabled>
+                            </div>
 
-                <?php if (!empty($docs)): ?>
-                    <hr class="my-4">
-                    <h6 class="mb-3 text-muted text-uppercase small fw-bold"><i class="fas fa-file-alt me-2"></i>Dokumen Terkait</h6>
-                    <div class="list-group list-group-flush">
-                        <?php foreach ($docs as $doc): ?>
-                            <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                <div class="d-flex align-items-center overflow-hidden me-3">
-                                    <div class="bg-light rounded p-2 me-3">
-                                        <i class="fas fa-file-pdf text-danger"></i>
+                            <div class="mb-3">
+                                <label class="form-label">Bulan</label>
+                                <input type="text" class="form-control" value="<?php echo get_month_name($asset['month']); ?>" disabled>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Tahun</label>
+                                <input type="text" class="form-control" value="<?php echo $asset['year']; ?>" disabled>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="total" class="form-label">Total Aset</label>
+                                <input type="number" class="form-control" id="total" name="total" 
+                                       value="<?php echo $asset['total']; ?>" min="0" required>
+                                <div class="invalid-feedback">Masukkan angka minimal 0.</div>
+                                <div class="form-text" id="totalFormatted"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Upload Dokumen (Opsional)</label>
+                                <div id="dz" class="dropzone mb-2" style="border: 2px dashed #667eea; border-radius: 10px; padding: 20px; text-align: center; background: #f8f9ff; color: #444; cursor: pointer;">
+                                    <div>
+                                        <i class="fas fa-cloud-upload-alt me-2"></i>
+                                        <span>Tarik & lepas file PDF/XLS/XLSX ke sini atau klik untuk memilih</span>
                                     </div>
-                                    <div class="text-truncate">
-                                        <a href="download.php?key=<?php echo urlencode($doc['key']); ?>" class="text-dark text-decoration-none fw-medium text-truncate d-block">
-                                            <?php echo escape($doc['name']); ?>
-                                        </a>
-                                        <small class="text-muted"><?php echo number_format($doc['size'] / 1024, 0, ',', '.'); ?> KB • <?php echo date('d/m/y', $doc['mtime']); ?></small>
-                                    </div>
+                                    <input type="file" name="file" id="fileInput" accept=".pdf,.xlsx,.xls" class="d-none">
                                 </div>
-                                <form method="POST" class="d-inline">
-                                    <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
-                                    <input type="hidden" name="delete_key" value="<?php echo escape($doc['key']); ?>">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Hapus dokumen ini?')" title="Hapus Dokumen">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
+                                <div id="fileName" class="form-text"></div>
+                                <div class="form-text">Maksimal 10 MB. Tipe: PDF, XLS, XLSX.</div>
                             </div>
-                        <?php endforeach; ?>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                                <a href="detail.php?kib=<?php echo $asset['kib_type']; ?>&year=<?php echo $asset['year']; ?>&month=<?php echo $asset['month']; ?>" class="btn btn-secondary">Batal</a>
+                                <button type="submit" class="btn" id="btnSubmit" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                                    <i class="fas fa-save me-2"></i>Simpan Perubahan
+                                </button>
+                            </div>
+                        </form>
+                        <hr class="my-4">
+                        <h6 class="mb-2"><i class="fas fa-file-alt me-2"></i>Dokumen Terkait</h6>
+                        <?php if (!empty($docs)): ?>
+                            <div class="list-group">
+                                <?php foreach ($docs as $doc): ?>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <a href="download.php?key=<?php echo urlencode($doc['key']); ?>" class="text-decoration-none">
+                                                <i class="fas fa-file me-2"></i><?php echo escape($doc['name']); ?>
+                                            </a>
+                                            <small class="text-muted ms-2"><?php echo number_format($doc['size'], 0, ',', '.'); ?> B • <?php echo date('d/m/Y H:i', $doc['mtime']); ?></small>
+                                        </div>
+                                        <form method="POST" class="d-inline">
+                                            <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+                                            <input type="hidden" name="delete_key" value="<?php echo escape($doc['key']); ?>">
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Hapus dokumen ini?')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php else: ?>
+                            <div class="text-muted">Belum ada dokumen untuk data ini.</div>
+                        <?php endif; ?>
                     </div>
-                <?php endif; ?>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    (function () {
-        const form = document.querySelector('form.needs-validation');
-        const btn = document.getElementById('btnSubmit');
-        const total = document.getElementById('total');
-        const totalFormatted = document.getElementById('totalFormatted');
-        const dz = document.getElementById('dz');
-        const input = document.getElementById('fileInput');
-        const fileName = document.getElementById('fileName');
-
-        if (total && totalFormatted) {
-            const fmt = new Intl.NumberFormat('id-ID');
-            const update = () => {
-                const v = parseInt(total.value || '0', 10);
-                totalFormatted.textContent = v ? 'Rp ' + fmt.format(v) : '';
-            };
-            total.addEventListener('input', update);
-            update();
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <?php
+        $fm = get_flash_message();
+        $toastMessage = '';
+        $toastType = 'info';
+        if ($fm) {
+            $toastMessage = $fm['message'] ?? '';
+            $toastType = $fm['type'] ?? 'info';
+        } elseif (!empty($error)) {
+            $toastMessage = $error;
+            $toastType = 'danger';
         }
-
-        if (dz && input) {
-            dz.addEventListener('click', () => input.click());
-
-            dz.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dz.classList.remove('bg-light');
-                dz.classList.add('bg-white', 'border-primary');
-            });
-
-            dz.addEventListener('dragleave', () => {
-                dz.classList.add('bg-light');
-                dz.classList.remove('bg-white', 'border-primary');
-            });
-
-            dz.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dz.classList.add('bg-light');
-                dz.classList.remove('bg-white', 'border-primary');
-
-                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                    input.files = e.dataTransfer.files;
-                    fileName.textContent = 'File terpilih: ' + e.dataTransfer.files[0].name;
-                }
-            });
-
-            input.addEventListener('change', () => {
-                if (input.files.length > 0) {
-                    fileName.textContent = 'File terpilih: ' + input.files[0].name;
-                }
-            });
-        }
-
-        if (form) {
-            form.addEventListener('submit', function (event) {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                } else {
-                    if (btn) {
-                        btn.disabled = true;
-                        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan...';
+        $toastClass = 'text-bg-info';
+        if ($toastType === 'success') $toastClass = 'text-bg-success';
+        elseif ($toastType === 'danger') $toastClass = 'text-bg-danger';
+        elseif ($toastType === 'warning') $toastClass = 'text-bg-warning';
+    ?>
+    <?php if (!empty($toastMessage)): ?>
+        <div class="toast-container position-fixed top-0 end-0 p-3">
+            <div id="mainToast" class="toast align-items-center <?php echo $toastClass; ?> border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
+                <div class="d-flex">
+                    <div class="toast-body"><?php echo escape($toastMessage); ?></div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+    <script>
+        (function () {
+            const form = document.querySelector('form.needs-validation');
+            const btn = document.getElementById('btnSubmit');
+            const total = document.getElementById('total');
+            const totalFormatted = document.getElementById('totalFormatted');
+            const dz = document.getElementById('dz');
+            const input = document.getElementById('fileInput');
+            const fileName = document.getElementById('fileName');
+            if (total && totalFormatted) {
+                const fmt = new Intl.NumberFormat('id-ID');
+                const update = () => {
+                    const v = parseInt(total.value || '0', 10);
+                    totalFormatted.textContent = v ? 'Nilai: Rp ' + fmt.format(v) : '';
+                };
+                total.addEventListener('input', update);
+                update();
+            }
+            if (dz && input) {
+                dz.addEventListener('click', () => input.click());
+                dz.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    dz.style.background = '#eef2ff';
+                });
+                dz.addEventListener('dragleave', () => {
+                    dz.style.background = '#f8f9ff';
+                });
+                dz.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dz.style.background = '#f8f9ff';
+                    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                        input.files = e.dataTransfer.files;
+                        fileName.textContent = e.dataTransfer.files[0].name;
                     }
-                }
-                form.classList.add('was-validated');
-            }, false);
-        }
-    })();
-</script>
-
-<?php require_once '../inc/footer.php'; ?>
+                });
+                input.addEventListener('change', () => {
+                    if (input.files.length > 0) {
+                        fileName.textContent = input.files[0].name;
+                    }
+                });
+            }
+            if (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    } else {
+                        if (btn) {
+                            btn.disabled = true;
+                            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan...';
+                        }
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            }
+            const toastEl = document.getElementById('mainToast');
+            if (toastEl && typeof bootstrap !== 'undefined') {
+                new bootstrap.Toast(toastEl).show();
+            }
+        })();
+    </script>
+</body>
+</html>
