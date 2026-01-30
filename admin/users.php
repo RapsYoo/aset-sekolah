@@ -45,223 +45,182 @@ $users = db_fetch_all(
 
 // Ambil roles
 $roles = db_fetch_all("SELECT * FROM roles");
+
+$page_title = 'Manajemen User';
+require_once '../inc/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manajemen User - Sistem Monitoring Aset Sekolah</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary: #667eea;
-            --secondary: #764ba2;
-        }
-        .navbar {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-        }
-        body {
-            background: #f8f9fa;
-        }
-        .table-container {
-            background: white;
-            border-radius: 8px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-    </style>
-</head>
-<body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-dark navbar-expand-lg">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="../dashboard.php">
-                <i class="fas fa-chart-bar me-2"></i>Monitoring Aset Sekolah
-            </a>
-            <a class="nav-link text-white" href="../dashboard.php">
-                <i class="fas fa-arrow-left me-2"></i>Kembali
-            </a>
-        </div>
-    </nav>
 
-    <div class="container-fluid mt-5">
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <h3><i class="fas fa-users me-2"></i>Manajemen Pengguna</h3>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-1"><i class="fas fa-users-cog me-2"></i>Manajemen Pengguna</h4>
+        <p class="text-muted mb-0">Kelola akun akses sistem</p>
+    </div>
+</div>
+
+<!-- Form Tambah User -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-user-plus me-2 text-primary"></i>Tambah Pengguna Baru</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" class="row g-3 needs-validation" novalidate>
+            <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+            <input type="hidden" name="action" value="add_user">
+
+            <div class="col-md-3">
+                <label class="form-label small text-muted">Nama Lengkap</label>
+                <input type="text" class="form-control" name="name" placeholder="Contoh: Budi Santoso" required>
+                <div class="invalid-feedback">Nama harus diisi.</div>
             </div>
-        </div>
-
-        <!-- Form Tambah User -->
-        <div class="table-container mb-4">
-            <h5 class="mb-3"><i class="fas fa-user-plus me-2"></i>Tambah Pengguna Baru</h5>
-
-            
-
-            <form method="POST" class="row g-3 needs-validation" novalidate>
-                <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
-                <input type="hidden" name="action" value="add_user">
-
-                <div class="col-md-3">
-                    <input type="text" class="form-control" name="name" placeholder="Nama Lengkap" required>
-                    <div class="invalid-feedback">Nama harus diisi.</div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted">Email</label>
+                <input type="email" class="form-control" name="email" placeholder="email@sekolah.com" required>
+                <div class="invalid-feedback">Email tidak valid.</div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted">Password</label>
+                <div class="input-group">
+                    <input type="password" class="form-control" name="password" id="password" placeholder="Minimal 6 karakter" required minlength="6">
+                    <button class="btn btn-outline-secondary" type="button" id="togglePassword"><i class="fas fa-eye"></i></button>
                 </div>
-                <div class="col-md-3">
-                    <input type="email" class="form-control" name="email" placeholder="Email" required>
-                    <div class="invalid-feedback">Email tidak valid.</div>
-                </div>
-                <div class="col-md-2">
-                    <div class="input-group">
-                        <input type="password" class="form-control" name="password" id="password" placeholder="Password" required minlength="6">
-                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">Tampilkan</button>
-                    </div>
-                    <div class="invalid-feedback">Password minimal 6 karakter.</div>
-                    <div class="form-text" id="pwdStrength"></div>
-                </div>
-                <div class="col-md-2">
-                    <select class="form-select" name="role_id" required>
-                        <option value="">-- Role --</option>
-                        <?php foreach ($roles as $role): ?>
-                            <option value="<?php echo $role['id']; ?>"><?php echo escape($role['name']); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                    <div class="invalid-feedback">Pilih role.</div>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn w-100" id="btnSubmit" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                        Tambah
-                    </button>
-                </div>
-            </form>
-        </div>
+                <div class="invalid-feedback">Password minimal 6 karakter.</div>
+                <div class="form-text" id="pwdStrength"></div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted">Role</label>
+                <select class="form-select" name="role_id" required>
+                    <option value="">-- Pilih --</option>
+                    <?php foreach ($roles as $role): ?>
+                        <option value="<?php echo $role['id']; ?>"><?php echo escape($role['name']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <div class="invalid-feedback">Pilih role.</div>
+            </div>
+            <div class="col-md-1 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100" id="btnSubmit">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
-        <!-- Daftar User -->
-        <div class="table-container">
-            <h5 class="mb-3"><i class="fas fa-list me-2"></i>Daftar Pengguna</h5>
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
+<!-- Daftar User -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-list me-2 text-primary"></i>Daftar Pengguna</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Nama</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Terdaftar</th>
+                        <th class="pe-4 text-end">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($users as $u): ?>
                         <tr>
-                            <th>Nama</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th>Terdaftar</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($users as $u): ?>
-                            <tr>
-                                <td><?php echo escape($u['name']); ?></td>
-                                <td><?php echo escape($u['email']); ?></td>
-                                <td>
-                                    <span class="badge <?php echo $u['role_name'] === 'admin' ? 'bg-danger' : 'bg-info'; ?>">
-                                        <?php echo escape($u['role_name']); ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge <?php echo $u['is_active'] ? 'bg-success' : 'bg-secondary'; ?>">
-                                        <?php echo $u['is_active'] ? 'Aktif' : 'Nonaktif'; ?>
-                                    </span>
-                                </td>
-                                <td><?php echo format_date($u['created_at']); ?></td>
-                                <td>
-                                    <a href="edit_user.php?id=<?php echo $u['id']; ?>" class="btn btn-sm btn-warning">
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 32px; height: 32px;">
+                                        <i class="fas fa-user text-secondary"></i>
+                                    </div>
+                                    <span class="fw-medium"><?php echo escape($u['name']); ?></span>
+                                </div>
+                            </td>
+                            <td><?php echo escape($u['email']); ?></td>
+                            <td>
+                                <span class="badge <?php echo $u['role_name'] === 'admin' ? 'bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25' : 'bg-info bg-opacity-10 text-info border border-info border-opacity-25'; ?> rounded-pill px-3">
+                                    <?php echo escape($u['role_name']); ?>
+                                </span>
+                            </td>
+                            <td>
+                                <?php if ($u['is_active']): ?>
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill">Aktif</span>
+                                <?php else: ?>
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 rounded-pill">Nonaktif</span>
+                                <?php endif; ?>
+                            </td>
+                            <td><small class="text-muted"><?php echo format_date($u['created_at']); ?></small></td>
+                            <td class="pe-4 text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="edit_user.php?id=<?php echo $u['id']; ?>" class="btn btn-outline-warning" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <a href="delete_user.php?id=<?php echo $u['id']; ?>" class="btn btn-sm btn-danger"
-                                       onclick="return confirm('Yakin hapus user?')">
+                                    <a href="delete_user.php?id=<?php echo $u['id']; ?>" class="btn btn-outline-danger"
+                                       onclick="return confirm('Yakin hapus user <?php echo escape($u['name']); ?>?')" title="Hapus">
                                         <i class="fas fa-trash"></i>
                                     </a>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <?php
-        $fm = get_flash_message();
-        $toastMessage = '';
-        $toastType = 'info';
-        if ($fm) {
-            $toastMessage = $fm['message'] ?? '';
-            $toastType = $fm['type'] ?? 'info';
-        } elseif (!empty($success)) {
-            $toastMessage = $success;
-            $toastType = 'success';
-        } elseif (!empty($error)) {
-            $toastMessage = $error;
-            $toastType = 'danger';
+<script>
+    (function () {
+        const form = document.querySelector('form.needs-validation');
+        const btn = document.getElementById('btnSubmit');
+        const pwd = document.getElementById('password');
+        const toggle = document.getElementById('togglePassword');
+        const strength = document.getElementById('pwdStrength');
+
+        if (toggle && pwd) {
+            toggle.addEventListener('click', function () {
+                const isPwd = pwd.getAttribute('type') === 'password';
+                pwd.setAttribute('type', isPwd ? 'text' : 'password');
+                toggle.innerHTML = isPwd ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+            });
         }
-        $toastClass = 'text-bg-info';
-        if ($toastType === 'success') $toastClass = 'text-bg-success';
-        elseif ($toastType === 'danger') $toastClass = 'text-bg-danger';
-        elseif ($toastType === 'warning') $toastClass = 'text-bg-warning';
-    ?>
-    <?php if (!empty($toastMessage)): ?>
-        <div class="toast-container position-fixed top-0 end-0 p-3">
-            <div id="mainToast" class="toast align-items-center <?php echo $toastClass; ?> border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
-                <div class="d-flex">
-                    <div class="toast-body"><?php echo escape($toastMessage); ?></div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                </div>
-            </div>
-        </div>
-    <?php endif; ?>
-    <script>
-        (function () {
-            const form = document.querySelector('form.needs-validation');
-            const btn = document.getElementById('btnSubmit');
-            const pwd = document.getElementById('password');
-            const toggle = document.getElementById('togglePassword');
-            const strength = document.getElementById('pwdStrength');
-            if (toggle && pwd) {
-                toggle.addEventListener('click', function () {
-                    const isPwd = pwd.getAttribute('type') === 'password';
-                    pwd.setAttribute('type', isPwd ? 'text' : 'password');
-                    toggle.textContent = isPwd ? 'Sembunyikan' : 'Tampilkan';
-                });
-            }
-            if (pwd && strength) {
-                const updateStrength = () => {
-                    const v = pwd.value || '';
-                    let score = 0;
-                    if (v.length >= 6) score++;
-                    if (/[A-Z]/.test(v)) score++;
-                    if (/[a-z]/.test(v)) score++;
-                    if (/\d/.test(v)) score++;
-                    if (/[^A-Za-z0-9]/.test(v)) score++;
-                    const levels = ['Sangat lemah', 'Lemah', 'Sedang', 'Kuat', 'Sangat kuat'];
-                    strength.textContent = v ? 'Kekuatan: ' + levels[Math.max(0, score - 1)] : '';
-                };
-                pwd.addEventListener('input', updateStrength);
-                updateStrength();
-            }
-            if (form) {
-                form.addEventListener('submit', function (event) {
-                    if (!form.checkValidity()) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    } else {
-                        if (btn) {
-                            btn.disabled = true;
-                            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Memproses...';
-                        }
+
+        if (pwd && strength) {
+            const updateStrength = () => {
+                const v = pwd.value || '';
+                let score = 0;
+                if (v.length >= 6) score++;
+                if (/[A-Z]/.test(v)) score++;
+                if (/[a-z]/.test(v)) score++;
+                if (/\d/.test(v)) score++;
+                if (/[^A-Za-z0-9]/.test(v)) score++;
+
+                const levels = ['Sangat lemah', 'Lemah', 'Sedang', 'Kuat', 'Sangat kuat'];
+                const colors = ['text-danger', 'text-warning', 'text-info', 'text-primary', 'text-success'];
+
+                if (v) {
+                    strength.textContent = levels[Math.max(0, score - 1)];
+                    strength.className = 'form-text fw-bold ' + colors[Math.max(0, score - 1)];
+                } else {
+                    strength.textContent = '';
+                }
+            };
+            pwd.addEventListener('input', updateStrength);
+        }
+
+        if (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                } else {
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
                     }
-                    form.classList.add('was-validated');
-                }, false);
-            }
-            const toastEl = document.getElementById('mainToast');
-            if (toastEl && typeof bootstrap !== 'undefined') {
-                new bootstrap.Toast(toastEl).show();
-            }
-        })();
-    </script>
-</body>
-</html>
+                }
+                form.classList.add('was-validated');
+            }, false);
+        }
+    })();
+</script>
+
+<?php require_once '../inc/footer.php'; ?>
