@@ -72,6 +72,11 @@ function is_active($path) {
                         <i class="fas fa-users"></i>
                         <span>Manajemen User</span>
                     </a>
+                    
+                    <a href="<?php echo APP_URL; ?>/admin/roles.php" class="sidebar-link <?php echo is_active('admin/roles.php'); ?>">
+                        <i class="fas fa-user-shield"></i>
+                        <span>Kelola Role</span>
+                    </a>
                 <?php endif; ?>
 
                 <div class="sidebar-divider"></div>
