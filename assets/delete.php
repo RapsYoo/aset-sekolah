@@ -2,6 +2,7 @@
 require_once '../inc/auth.php';
 
 require_login();
+require_can_edit();
 
 $id = (int)($_GET['id'] ?? 0);
 $stmt = db_prepare("DELETE FROM assets_monthly WHERE id = ?");

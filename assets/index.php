@@ -51,9 +51,11 @@ require_once '../inc/header.php';
                     </option>
                 <?php endforeach; ?>
             </select>
-            <a href="create.php" class="btn btn-primary text-nowrap">
-                <i class="fas fa-plus me-1"></i>Tambah Aset
-            </a>
+            <?php if (!is_supervisor()): ?>
+                <a href="create.php" class="btn btn-primary text-nowrap">
+                    <i class="fas fa-plus me-1"></i>Tambah Aset
+                </a>
+            <?php endif; ?>
         </form>
     </div>
 </div>

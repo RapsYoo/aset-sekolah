@@ -9,7 +9,8 @@ $config = [
     'db_pass' => '',
     'db_name' => 'aset_sekolah',
     'db_port' => 3306,
-    'app_url' => 'http://localhost/aset-sekolah'
+    'app_url' => 'http://localhost/aset-sekolah',
+    'python_path' => 'python'
 ];
 
 // Fungsi untuk mendapatkan nilai config

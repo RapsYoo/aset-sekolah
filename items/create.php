@@ -4,6 +4,7 @@ require_once '../inc/helpers.php';
 require_once '../inc/storage.php';
 
 require_login();
+require_can_edit();
 $user = current_user();
 $units = get_units();
 $conditions = get_item_conditions();

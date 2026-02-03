@@ -59,9 +59,11 @@ require_once '../inc/header.php';
         <p class="text-muted mb-0">Daftar inventaris barang dan kondisi per unit</p>
     </div>
     <div class="d-flex gap-2">
-        <a href="create.php" class="btn btn-primary">
-            <i class="fas fa-plus me-2"></i>Tambah Barang
-        </a>
+        <?php if (!is_supervisor()): ?>
+            <a href="create.php" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Tambah Barang
+            </a>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -129,14 +131,16 @@ require_once '../inc/header.php';
                                             <small class="text-muted"><?php echo format_date($it['created_at']); ?></small>
                                         </td>
                                         <td class="pe-4 text-end">
-                                            <div class="btn-group btn-group-sm">
-                                                <a href="edit.php?id=<?php echo (int)$it['id']; ?>" class="btn btn-outline-secondary">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <a href="delete.php?id=<?php echo (int)$it['id']; ?>" class="btn btn-outline-danger" onclick="return confirm('Yakin hapus barang ini?');">
-                                                    <i class="fas fa-trash"></i>
-                                                </a>
-                                            </div>
+                                            <?php if (!is_supervisor()): ?>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="edit.php?id=<?php echo (int)$it['id']; ?>" class="btn btn-outline-secondary">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <a href="delete.php?id=<?php echo (int)$it['id']; ?>" class="btn btn-outline-danger" onclick="return confirm('Yakin hapus barang ini?');">
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
+                                                </div>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>

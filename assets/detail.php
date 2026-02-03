@@ -65,10 +65,12 @@ require_once '../inc/header.php';
         <a href="index.php?year=<?php echo $year; ?>" class="btn btn-light text-muted">
             <i class="fas fa-arrow-left me-2"></i>Kembali
         </a>
-        <a href="create.php?kib=<?php echo $kib; ?>&year=<?php echo $year; ?>&month=<?php echo $month; ?>"
-           class="btn btn-primary">
-            <i class="fas fa-plus me-2"></i>Tambah Data
-        </a>
+        <?php if (!is_supervisor()): ?>
+            <a href="create.php?kib=<?php echo $kib; ?>&year=<?php echo $year; ?>&month=<?php echo $month; ?>"
+               class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Tambah Data
+            </a>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -176,18 +178,20 @@ require_once '../inc/header.php';
                                             </div>
                                         </td>
                                         <td class="pe-4 text-end">
-                                            <div class="btn-group btn-group-sm">
-                                                <a href="edit.php?id=<?php echo $asset['id']; ?>" 
-                                                   class="btn btn-outline-warning" title="Edit">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <a href="detail.php?kib=<?php echo $kib; ?>&year=<?php echo $year; ?>&month=<?php echo $month; ?>&delete_id=<?php echo $asset['id']; ?>" 
-                                                   class="btn btn-outline-danger"
-                                                   onclick="return confirm('Yakin hapus data aset untuk <?php echo escape($asset['unit_name']); ?>?')" 
-                                                   title="Hapus">
-                                                    <i class="fas fa-trash"></i>
-                                                </a>
-                                            </div>
+                                            <?php if (!is_supervisor()): ?>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="edit.php?id=<?php echo $asset['id']; ?>" 
+                                                       class="btn btn-outline-warning" title="Edit">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <a href="detail.php?kib=<?php echo $kib; ?>&year=<?php echo $year; ?>&month=<?php echo $month; ?>&delete_id=<?php echo $asset['id']; ?>" 
+                                                       class="btn btn-outline-danger"
+                                                       onclick="return confirm('Yakin hapus data aset untuk <?php echo escape($asset['unit_name']); ?>?')" 
+                                                       title="Hapus">
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
+                                                </div>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -196,12 +200,14 @@ require_once '../inc/header.php';
                                     <td colspan="6" class="text-center text-muted py-5">
                                         <i class="fas fa-inbox fa-3x mb-3 d-block opacity-25"></i>
                                         Belum ada data aset untuk periode ini.
-                                        <div class="mt-3">
-                                            <a href="create.php?kib=<?php echo $kib; ?>&year=<?php echo $year; ?>&month=<?php echo $month; ?>" 
-                                               class="btn btn-sm btn-primary">
-                                                <i class="fas fa-plus me-1"></i>Tambah Data Pertama
-                                            </a>
-                                        </div>
+                                        <?php if (!is_supervisor()): ?>
+                                            <div class="mt-3">
+                                                <a href="create.php?kib=<?php echo $kib; ?>&year=<?php echo $year; ?>&month=<?php echo $month; ?>" 
+                                                   class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-plus me-1"></i>Tambah Data Pertama
+                                                </a>
+                                            </div>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endif; ?>

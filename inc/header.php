@@ -13,6 +13,10 @@ function is_active($path) {
     }
     return '';
 }
+
+if (!isset($user) && function_exists('current_user')) {
+    $user = current_user();
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -76,6 +80,10 @@ function is_active($path) {
                     <a href="<?php echo APP_URL; ?>/admin/roles.php" class="sidebar-link <?php echo is_active('admin/roles.php'); ?>">
                         <i class="fas fa-user-shield"></i>
                         <span>Kelola Role</span>
+                    </a>
+                    <a href="<?php echo APP_URL; ?>/automation/index.php" class="sidebar-link <?php echo is_active('automation/'); ?>">
+                        <i class="fas fa-robot"></i>
+                        <span>Automation</span>
                     </a>
                 <?php endif; ?>
 

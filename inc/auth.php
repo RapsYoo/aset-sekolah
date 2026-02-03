@@ -44,6 +44,14 @@ function is_admin() {
     return isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
 }
 
+function is_supervisor() {
+    return isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'supervisor';
+}
+
+function can_edit() {
+    return !is_supervisor();
+}
+
 /**
  * Get current user
  */
@@ -112,6 +120,14 @@ function require_login() {
 function require_admin() {
     require_login();
     if (!is_admin()) {
+        http_response_code(403);
+        die("Akses Ditolak");
+    }
+}
+
+function require_can_edit() {
+    require_login();
+    if (!can_edit()) {
         http_response_code(403);
         die("Akses Ditolak");
     }
