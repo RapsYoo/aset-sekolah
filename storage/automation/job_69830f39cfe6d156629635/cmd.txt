@@ -1,0 +1,1 @@
+start "" /B cmd /C ""python" "C:\laragon\www\aset-sekolah\automation\KIB_Master.py" "cli" "A" "2025-12-31" "parepare" "2" "1" "C:\laragon\www\aset-sekolah\storage\automation/job_69830f39cfe6d156629635" "C:\laragon\www\aset-sekolah\storage\automation/job_69830f39cfe6d156629635" > "C:\laragon\www\aset-sekolah\storage\automation/job_69830f39cfe6d156629635\log.txt" 2>&1"

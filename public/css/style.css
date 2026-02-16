@@ -11,9 +11,9 @@
     --gray: #8d99ae;
     --surface: #ffffff;
     --border-radius: 12px;
-    --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     --sidebar-width: 260px;
     --header-height: 70px;
     --transition: all 0.3s ease;
@@ -31,13 +31,16 @@ body {
     width: 8px;
     height: 8px;
 }
+
 ::-webkit-scrollbar-track {
     background: #f1f1f1;
 }
+
 ::-webkit-scrollbar-thumb {
     background: #c1c1c1;
     border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
     background: #a8a8a8;
 }
@@ -54,7 +57,7 @@ body {
     width: var(--sidebar-width);
     background: var(--surface);
     color: var(--dark);
-    border-right: 1px solid rgba(0,0,0,0.05);
+    border-right: 1px solid rgba(0, 0, 0, 0.05);
     display: flex;
     flex-direction: column;
     transition: var(--transition);
@@ -73,7 +76,7 @@ body {
     font-weight: 700;
     font-size: 1.25rem;
     color: var(--primary);
-    border-bottom: 1px solid rgba(0,0,0,0.05);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .sidebar-menu {
@@ -114,7 +117,7 @@ body {
     height: 0;
     margin: 0.5rem 0;
     overflow: hidden;
-    border-top: 1px solid rgba(0,0,0,0.05);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .sidebar-heading {
@@ -181,7 +184,7 @@ body {
 
 .card-header {
     background: transparent;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     padding: 1.25rem 1.5rem;
     font-weight: 600;
     color: var(--dark);
@@ -194,6 +197,17 @@ body {
     padding: 1.5rem;
 }
 
+/* Stats Card Row */
+.stat-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.stat-row>.stat-col {
+    flex: 1 1 auto;
+}
+
 /* Stats Card */
 .stat-card {
     display: flex;
@@ -204,6 +218,8 @@ body {
     box-shadow: var(--shadow-sm);
     border-bottom: 4px solid transparent;
     transition: var(--transition);
+    white-space: nowrap;
+    height: 100%;
 }
 
 .stat-card:hover {
@@ -213,6 +229,7 @@ body {
 
 .stat-icon {
     width: 48px;
+    min-width: 48px;
     height: 48px;
     border-radius: 12px;
     display: flex;
@@ -229,12 +246,14 @@ body {
     color: var(--gray);
     font-size: 0.875rem;
     font-weight: 500;
+    white-space: nowrap;
 }
 
 .stat-details h3 {
     margin: 5px 0 0;
     font-weight: 700;
     color: var(--dark);
+    white-space: nowrap;
 }
 
 /* Tables */
@@ -317,7 +336,7 @@ body {
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0,0,0,0.5);
+        background: rgba(0, 0, 0, 0.5);
         z-index: 950;
         display: none;
         opacity: 0;
@@ -344,7 +363,7 @@ body {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     border-radius: 20px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
     overflow: hidden;
     width: 100%;
     max-width: 900px;

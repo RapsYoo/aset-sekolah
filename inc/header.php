@@ -58,10 +58,6 @@ if (!isset($user) && function_exists('current_user')) {
                     <span>Data Aset</span>
                 </a>
 
-                <a href="<?php echo APP_URL; ?>/items/index.php" class="sidebar-link <?php echo is_active('items/'); ?>">
-                    <i class="fas fa-box-open"></i>
-                    <span>Kelola Barang</span>
-                </a>
 
                 <?php if (function_exists('is_admin') && is_admin()): ?>
                     <div class="sidebar-divider"></div>
@@ -81,10 +77,7 @@ if (!isset($user) && function_exists('current_user')) {
                         <i class="fas fa-user-shield"></i>
                         <span>Kelola Role</span>
                     </a>
-                    <a href="<?php echo APP_URL; ?>/automation/index.php" class="sidebar-link <?php echo is_active('automation/'); ?>">
-                        <i class="fas fa-robot"></i>
-                        <span>Automation</span>
-                    </a>
+
                 <?php endif; ?>
 
                 <div class="sidebar-divider"></div>
@@ -124,6 +117,10 @@ if (!isset($user) && function_exists('current_user')) {
                         <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg">
                             <li><h6 class="dropdown-header">Login sebagai <?php echo escape($user['role'] ?? ''); ?></h6></li>
                             <li><a class="dropdown-item" href="<?php echo APP_URL; ?>/profile.php"><i class="fas fa-user me-2"></i> Profil</a></li>
+                            <li><a class="dropdown-item" href="<?php echo APP_URL; ?>/items/index.php"><i class="fas fa-box-open me-2"></i> Kelola Barang</a></li>
+                            <?php if (function_exists('is_admin') && is_admin()): ?>
+                            <li><a class="dropdown-item" href="<?php echo APP_URL; ?>/automation/index.php"><i class="fas fa-robot me-2"></i> Automation</a></li>
+                            <?php endif; ?>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item text-danger" href="<?php echo APP_URL; ?>/logout.php"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
                         </ul>

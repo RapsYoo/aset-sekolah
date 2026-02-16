@@ -1,0 +1,47 @@
+There was an error managing chromedriver (error sending request for url (https://storage.googleapis.com/chrome-for-testing-public/144.0.7559.133/win64/chromedriver-win64.zip)); using driver found in the cache
+Traceback (most recent call last):
+  File "C:\laragon\www\aset-sekolah\automation\KIB_Master.py", line 1514, in <module>
+    main()
+  File "C:\laragon\www\aset-sekolah\automation\KIB_Master.py", line 1472, in main
+    run_kib_a()
+  File "C:\laragon\www\aset-sekolah\automation\KIB_Master.py", line 346, in run_kib_a
+    navigate_to_report(driver)
+  File "C:\laragon\www\aset-sekolah\automation\KIB_Master.py", line 123, in navigate_to_report
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.LINK_TEXT, "Laporan-Laporan")))
+  File "C:\Users\62878\AppData\Local\Programs\Python\Python311\Lib\site-packages\selenium\webdriver\support\wait.py", line 129, in until
+    value = method(self._driver)
+            ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\62878\AppData\Local\Programs\Python\Python311\Lib\site-packages\selenium\webdriver\support\expected_conditions.py", line 104, in _predicate
+    return driver.find_element(*locator)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\62878\AppData\Local\Programs\Python\Python311\Lib\site-packages\selenium\webdriver\remote\webdriver.py", line 926, in find_element
+    return self.execute(Command.FIND_ELEMENT, {"using": by, "value": value})["value"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\62878\AppData\Local\Programs\Python\Python311\Lib\site-packages\selenium\webdriver\remote\webdriver.py", line 458, in execute
+    self.error_handler.check_response(response)
+  File "C:\Users\62878\AppData\Local\Programs\Python\Python311\Lib\site-packages\selenium\webdriver\remote\errorhandler.py", line 232, in check_response
+    raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.NoSuchWindowException: Message: no such window: target window already closed
+from unknown error: web view not found
+  (Session info: chrome=144.0.7559.110)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x7ff69d0d5715
+	0x7ff69d0d5770
+	0x7ff69ce8108d
+	0x7ff69ce57be2
+	0x7ff69cf0d386
+	0x7ff69cf29772
+	0x7ff69ceccc28
+	0x7ff69cecdb33
+	0x7ff69d3be9f0
+	0x7ff69d3b8ded
+	0x7ff69d3d969a
+	0x7ff69d0f11e5
+	0x7ff69d0f99cc
+	0x7ff69d0debf4
+	0x7ff69d0deda6
+	0x7ff69d0c4e87
+	0x7ffb0b04e8d7
+	0x7ffb0c60c53c
+

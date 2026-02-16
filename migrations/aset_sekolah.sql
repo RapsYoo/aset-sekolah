@@ -3,8 +3,8 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 13, 2026 at 11:53 AM
--- Server version: 8.0.30
+-- Generation Time: Feb 15, 2026 at 01:55 AM
+-- Server version: 8.0.32
 -- PHP Version: 8.1.10
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
@@ -20,6 +20,9 @@ SET time_zone = "+00:00";
 --
 -- Database: `aset_sekolah`
 --
+DROP DATABASE IF EXISTS `aset_sekolah`;
+CREATE DATABASE `aset_sekolah` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+USE `aset_sekolah`;
 
 -- --------------------------------------------------------
 
@@ -28,142 +31,47 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `assets_monthly` (
-  `id` int NOT NULL,
+  `id` int NOT NULL AUTO_INCREMENT,
   `kib_type` enum('A','B','C','D','E','F') NOT NULL,
   `year` int NOT NULL,
   `month` int NOT NULL,
   `unit_id` int NOT NULL,
-  `total` int NOT NULL,
+  `total` bigint NOT NULL,
   `created_by` int NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_kib_month_unit` (`kib_type`,`year`,`month`,`unit_id`),
+  KEY `created_by` (`created_by`),
+  KEY `unit_id` (`unit_id`),
+  KEY `idx_kib_year` (`kib_type`,`year`),
+  KEY `idx_month` (`month`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `assets_monthly`
---
-
-INSERT INTO `assets_monthly` (`id`, `kib_type`, `year`, `month`, `unit_id`, `total`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 'A', 2025, 1, 1, 150, 1, '2026-01-13 10:02:09', '2026-01-13 10:02:09'),
-(2, 'A', 2025, 2, 1, 155, 1, '2026-01-13 10:02:09', '2026-01-13 10:02:09'),
-(3, 'A', 2025, 3, 1, 160, 1, '2026-01-13 10:02:09', '2026-01-13 10:02:09'),
-(4, 'A', 2025, 4, 1, 165, 1, '2026-01-13 10:02:09', '2026-01-13 10:02:09'),
-(5, 'A', 2025, 5, 1, 170, 1, '2026-01-13 10:02:09', '2026-01-13 10:02:09'),
-(6, 'A', 2025, 6, 1, 175, 1, '2026-01-13 10:02:09', '2026-01-13 10:02:09'),
-(7, 'B', 2025, 1, 1, 100, 1, '2026-01-13 10:02:09', '2026-01-13 10:02:09'),
-(8, 'B', 2025, 2, 1, 105, 1, '2026-01-13 10:02:09', '2026-01-13 10:02:09'),
-(9, 'B', 2025, 3, 1, 110, 1, '2026-01-13 10:02:09', '2026-01-13 10:02:09'),
-(10, 'C', 2025, 1, 1, 200, 1, '2026-01-13 10:02:09', '2026-01-13 10:02:09'),
-(11, 'C', 2025, 2, 1, 205, 1, '2026-01-13 10:02:09', '2026-01-13 10:02:09'),
-(12, 'C', 2025, 3, 1, 210, 1, '2026-01-13 10:02:09', '2026-01-13 10:02:09'),
-(13, 'A', 2026, 1, 2, 1500000, 1, '2026-01-13 10:03:05', '2026-01-13 10:03:05'),
-(14, 'A', 2026, 1, 3, 4556889, 1, '2026-01-13 10:39:24', '2026-01-13 10:39:24'),
-(15, 'B', 2026, 1, 1, 1200000, 2, '2026-01-13 10:50:09', '2026-01-13 10:50:09');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `roles`
+-- Table structure for table `documents`
 --
 
-CREATE TABLE `roles` (
-  `id` int NOT NULL,
-  `name` varchar(50) NOT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `roles`
---
-
-INSERT INTO `roles` (`id`, `name`, `created_at`) VALUES
-(1, 'admin', '2026-01-13 10:02:09'),
-(2, 'pegawai', '2026-01-13 10:02:09');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `units`
---
-
-CREATE TABLE `units` (
-  `id` int NOT NULL,
-  `code` varchar(20) NOT NULL,
-  `name` varchar(255) NOT NULL,
+CREATE TABLE `documents` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `unit_id` int NOT NULL,
+  `kib_type` enum('A','B','C','D','E','F') NOT NULL,
+  `year` int NOT NULL,
+  `month` int NOT NULL,
+  `original_filename` varchar(255) NOT NULL,
+  `object_key` varchar(255) NOT NULL,
+  `mime_type` varchar(100) NOT NULL,
+  `size` int NOT NULL,
+  `uploaded_by` int NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  PRIMARY KEY (`id`),
+  KEY `idx_unit_id` (`unit_id`),
+  KEY `idx_kib_year_month` (`kib_type`,`year`,`month`),
+  KEY `idx_object_key` (`object_key`),
+  KEY `idx_uploaded_by` (`uploaded_by`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `units`
---
-
-INSERT INTO `units` (`id`, `code`, `name`, `created_at`, `updated_at`) VALUES
-(1, 'SKL001', 'Sekolah Dasar Negeri 1', '2026-01-13 10:02:09', '2026-01-13 10:02:09'),
-(2, 'SKL002', 'Sekolah Dasar Negeri 2', '2026-01-13 10:02:09', '2026-01-13 10:02:09'),
-(3, 'SKL003', 'Sekolah Menengah Pertama 1', '2026-01-13 10:02:09', '2026-01-13 10:02:09');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `users`
---
-
-CREATE TABLE `users` (
-  `id` int NOT NULL,
-  `name` varchar(100) NOT NULL,
-  `email` varchar(100) NOT NULL,
-  `password_hash` varchar(255) NOT NULL,
-  `role_id` int NOT NULL,
-  `is_active` tinyint(1) DEFAULT '1',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `users`
---
-
-INSERT INTO `users` (`id`, `name`, `email`, `password_hash`, `role_id`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'Admin', 'admin@sekolah.com', '$2y$10$8xI/6T6bYZx5i1Z4zwSVhefy7qRgVQLcguXAwJUDuoXTyymJ7LNNu', 1, 1, '2026-01-13 10:02:09', '2026-01-13 10:51:45'),
-(2, 'Pegawai', 'pegawai@sekolah.com', '$2y$10$gKor3vI2ASr1o6t5C4f0AeUiGz6wxrR03vjfv6Fpazbp5qbGTPkQq', 2, 1, '2026-01-13 10:02:09', '2026-01-13 10:50:30');
-
---
--- Indexes for dumped tables
---
-
---
--- Indexes for table `assets_monthly`
---
-ALTER TABLE `assets_monthly`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `unique_kib_month_unit` (`kib_type`,`year`,`month`,`unit_id`),
-  ADD KEY `created_by` (`created_by`),
-  ADD KEY `unit_id` (`unit_id`),
-  ADD KEY `idx_kib_year` (`kib_type`,`year`),
-  ADD KEY `idx_month` (`month`);
-
---
--- Indexes for table `roles`
---
-ALTER TABLE `roles`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `name` (`name`);
-
---
--- Indexes for table `units`
---
-ALTER TABLE `units`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `code` (`code`);
-
---
--- Indexes for table `users`
---
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `email` (`email`),
-  ADD KEY `role_id` (`role_id`);
 
 -- --------------------------------------------------------
 
@@ -172,7 +80,7 @@ ALTER TABLE `users`
 --
 
 CREATE TABLE `items` (
-  `id` int NOT NULL,
+  `id` int NOT NULL AUTO_INCREMENT,
   `unit_id` int NOT NULL,
   `item_name` varchar(255) NOT NULL,
   `condition` enum('layak_pakai','tidak_layak_pakai') NOT NULL,
@@ -181,72 +89,102 @@ CREATE TABLE `items` (
   `photo_size` int DEFAULT NULL,
   `created_by` int NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_unit_id` (`unit_id`),
+  KEY `idx_condition` (`condition`),
+  KEY `idx_created_by` (`created_by`),
+  KEY `idx_photo_key` (`photo_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `roles`
+--
+
+CREATE TABLE `roles` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- AUTO_INCREMENT for dumped tables
+-- Dumping data for table `roles`
 --
 
---
--- AUTO_INCREMENT for table `assets_monthly`
---
-ALTER TABLE `assets_monthly`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+INSERT INTO `roles` (`id`, `name`, `created_at`) VALUES
+(1, 'admin', '2026-01-29 11:55:12'),
+(2, 'pegawai', '2026-01-29 11:55:12'),
+(3, 'supervisor', '2026-01-30 22:34:36');
+
+-- --------------------------------------------------------
 
 --
--- AUTO_INCREMENT for table `roles`
+-- Table structure for table `units`
 --
-ALTER TABLE `roles`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+CREATE TABLE `units` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `code` varchar(20) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `code` (`code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
 
 --
--- AUTO_INCREMENT for table `units`
+-- Table structure for table `users`
 --
-ALTER TABLE `units`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+CREATE TABLE `users` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `password_hash` varchar(255) NOT NULL,
+  `role_id` int NOT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`),
+  KEY `role_id` (`role_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- AUTO_INCREMENT for table `users`
+-- Dumping data for table `users` (admin & pegawai only)
 --
-ALTER TABLE `users`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
---
--- AUTO_INCREMENT for table `items`
---
-ALTER TABLE `items`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+INSERT INTO `users` (`id`, `name`, `email`, `password_hash`, `role_id`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'Admin', 'admin@sekolah.com', '$2y$10$8xI/6T6bYZx5i1Z4zwSVhefy7qRgVQLcguXAwJUDuoXTyymJ7LNNu', 1, 1, '2026-01-29 11:55:12', '2026-01-29 11:55:12'),
+(2, 'Pegawai', 'pegawai@sekolah.com', '$2y$10$gKor3vI2ASr1o6t5C4f0AeUiGz6wxrR03vjfv6Fpazbp5qbGTPkQq', 2, 1, '2026-01-29 11:55:12', '2026-01-31 12:16:15');
+
+-- --------------------------------------------------------
 
 --
 -- Constraints for dumped tables
 --
 
---
--- Constraints for table `assets_monthly`
---
 ALTER TABLE `assets_monthly`
   ADD CONSTRAINT `assets_monthly_ibfk_1` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `assets_monthly_ibfk_2` FOREIGN KEY (`unit_id`) REFERENCES `units` (`id`) ON DELETE CASCADE;
 
---
--- Indexes and Constraints for table `items`
---
-ALTER TABLE `items`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_unit_id` (`unit_id`),
-  ADD KEY `idx_condition` (`condition`),
-  ADD KEY `idx_created_by` (`created_by`),
-  ADD KEY `idx_photo_key` (`photo_key`);
+ALTER TABLE `documents`
+  ADD CONSTRAINT `documents_ibfk_unit` FOREIGN KEY (`unit_id`) REFERENCES `units` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `documents_ibfk_user` FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
 ALTER TABLE `items`
   ADD CONSTRAINT `items_ibfk_unit` FOREIGN KEY (`unit_id`) REFERENCES `units` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `items_ibfk_user` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
---
--- Constraints for table `users`
---
 ALTER TABLE `users`
   ADD CONSTRAINT `users_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE;
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

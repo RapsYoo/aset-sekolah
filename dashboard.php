@@ -54,8 +54,8 @@ require_once 'inc/header.php';
 </div>
 
 <!-- Stat Cards -->
-<div class="row mb-4">
-    <div class="col-md-3">
+<div class="stat-row mb-4">
+    <div class="stat-col">
         <div class="stat-card">
             <div class="stat-icon">
                 <i class="fas fa-boxes"></i>
@@ -66,7 +66,7 @@ require_once 'inc/header.php';
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="stat-col">
         <div class="stat-card">
             <div class="stat-icon">
                 <i class="fas fa-users"></i>
@@ -77,7 +77,7 @@ require_once 'inc/header.php';
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="stat-col">
         <div class="stat-card">
             <div class="stat-icon">
                 <i class="fas fa-id-badge"></i>
@@ -88,7 +88,7 @@ require_once 'inc/header.php';
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="stat-col">
         <div class="stat-card">
             <div class="stat-icon">
                 <i class="fas fa-calendar-alt"></i>

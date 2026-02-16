@@ -1,0 +1,186 @@
+Daftar sekolah yang ditemukan: ['SMAN 1 PAREPARE', 'SMAN 2 PAREPARE', 'SMAN 3 PAREPARE', 'SMAN 4 PAREPARE', 'SMAN 5 PAREPARE', 'SMKN 1 PAREPARE', 'SMKN 2 PAREPARE', 'SMKN 3 PAREPARE', 'SLBN 1 PAREPARE']
+Menunggu download SMAN 1 PAREPARE... (10s)
+Menunggu download SMAN 1 PAREPARE... (20s)
+Menunggu download SMAN 1 PAREPARE... (30s)
+Menunggu download SMAN 1 PAREPARE... (40s)
+Menunggu download SMAN 1 PAREPARE... (50s)
+Menunggu download SMAN 1 PAREPARE... (60s)
+Menunggu download SMAN 1 PAREPARE... (70s)
+Menunggu download SMAN 1 PAREPARE... (80s)
+Menunggu download SMAN 1 PAREPARE... (90s)
+Menunggu download SMAN 1 PAREPARE... (100s)
+Menunggu download SMAN 1 PAREPARE... (110s)
+Menunggu download SMAN 1 PAREPARE... (120s)
+Warning: Timeout - Tidak dapat download file untuk SMAN 1 PAREPARE
+Error saat download SMAN 2 PAREPARE: Message: invalid session id: session deleted as the browser has closed the connection
+from disconnected: not connected to DevTools
+  (Session info: chrome=144.0.7559.110); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidsessionidexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x7ff76adff3d5
+	0x7ff76adff430
+	0x7ff76aba10bd
+	0x7ff76ab8c642
+	0x7ff76abb29cb
+	0x7ff76ac2d500
+	0x7ff76ac49652
+	0x7ff76abecb0c
+	0x7ff76abeda53
+	0x7ff76b0db470
+	0x7ff76b0d586d
+	0x7ff76b0f621a
+	0x7ff76ae1b235
+	0x7ff76ae23a5c
+	0x7ff76ae08844
+	0x7ff76ae089f6
+	0x7ff76adeeb87
+	0x7ffb0b04e8d7
+	0x7ffb0c60c53c
+
+Error saat download SMAN 3 PAREPARE: Message: invalid session id; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidsessionidexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x7ff76adff3d5
+	0x7ff76adff430
+	0x7ff76aba0ea6
+	0x7ff76abebb13
+	0x7ff76ac257a2
+	0x7ff76ac1fbd6
+	0x7ff76ac1eb41
+	0x7ff76ab699e5
+	0x7ff76b0db470
+	0x7ff76b0d586d
+	0x7ff76b0f621a
+	0x7ff76ae1b235
+	0x7ff76ae23a5c
+	0x7ff76ab687aa
+	0x7ff76b2372c8
+	0x7ffb0b04e8d7
+	0x7ffb0c60c53c
+
+Error saat download SMAN 4 PAREPARE: Message: invalid session id; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidsessionidexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x7ff76adff3d5
+	0x7ff76adff430
+	0x7ff76aba0ea6
+	0x7ff76abebb13
+	0x7ff76ac257a2
+	0x7ff76ac1fbd6
+	0x7ff76ac1eb41
+	0x7ff76ab699e5
+	0x7ff76b0db470
+	0x7ff76b0d586d
+	0x7ff76b0f621a
+	0x7ff76ae1b235
+	0x7ff76ae23a5c
+	0x7ff76ab687aa
+	0x7ff76b2372c8
+	0x7ffb0b04e8d7
+	0x7ffb0c60c53c
+
+Error saat download SMAN 5 PAREPARE: Message: invalid session id; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidsessionidexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x7ff76adff3d5
+	0x7ff76adff430
+	0x7ff76aba0ea6
+	0x7ff76abebb13
+	0x7ff76ac257a2
+	0x7ff76ac1fbd6
+	0x7ff76ac1eb41
+	0x7ff76ab699e5
+	0x7ff76b0db470
+	0x7ff76b0d586d
+	0x7ff76b0f621a
+	0x7ff76ae1b235
+	0x7ff76ae23a5c
+	0x7ff76ab687aa
+	0x7ff76b2372c8
+	0x7ffb0b04e8d7
+	0x7ffb0c60c53c
+
+Error saat download SMKN 1 PAREPARE: Message: invalid session id; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidsessionidexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x7ff76adff3d5
+	0x7ff76adff430
+	0x7ff76aba0ea6
+	0x7ff76abebb13
+	0x7ff76ac257a2
+	0x7ff76ac1fbd6
+	0x7ff76ac1eb41
+	0x7ff76ab699e5
+	0x7ff76b0db470
+	0x7ff76b0d586d
+	0x7ff76b0f621a
+	0x7ff76ae1b235
+	0x7ff76ae23a5c
+	0x7ff76ab687aa
+	0x7ff76b2372c8
+	0x7ffb0b04e8d7
+	0x7ffb0c60c53c
+
+Error saat download SMKN 2 PAREPARE: Message: invalid session id; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidsessionidexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x7ff76adff3d5
+	0x7ff76adff430
+	0x7ff76aba0ea6
+	0x7ff76abebb13
+	0x7ff76ac257a2
+	0x7ff76ac1fbd6
+	0x7ff76ac1eb41
+	0x7ff76ab699e5
+	0x7ff76b0db470
+	0x7ff76b0d586d
+	0x7ff76b0f621a
+	0x7ff76ae1b235
+	0x7ff76ae23a5c
+	0x7ff76ab687aa
+	0x7ff76b2372c8
+	0x7ffb0b04e8d7
+	0x7ffb0c60c53c
+
+Error saat download SMKN 3 PAREPARE: Message: invalid session id; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidsessionidexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x7ff76adff3d5
+	0x7ff76adff430
+	0x7ff76aba0ea6
+	0x7ff76abebb13
+	0x7ff76ac257a2
+	0x7ff76ac1fbd6
+	0x7ff76ac1eb41
+	0x7ff76ab699e5
+	0x7ff76b0db470
+	0x7ff76b0d586d
+	0x7ff76b0f621a
+	0x7ff76ae1b235
+	0x7ff76ae23a5c
+	0x7ff76ab687aa
+	0x7ff76b2372c8
+	0x7ffb0b04e8d7
+	0x7ffb0c60c53c
+
+Error saat download SLBN 1 PAREPARE: Message: invalid session id; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidsessionidexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x7ff76adff3d5
+	0x7ff76adff430
+	0x7ff76aba0ea6
+	0x7ff76abebb13
+	0x7ff76ac257a2
+	0x7ff76ac1fbd6
+	0x7ff76ac1eb41
+	0x7ff76ab699e5
+	0x7ff76b0db470
+	0x7ff76b0d586d
+	0x7ff76b0f621a
+	0x7ff76ae1b235
+	0x7ff76ae23a5c
+	0x7ff76ab687aa
+	0x7ff76b2372c8
+	0x7ffb0b04e8d7
+	0x7ffb0c60c53c
+

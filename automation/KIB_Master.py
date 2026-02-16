@@ -21,9 +21,12 @@ from urllib.parse import urljoin
 # ===================== HELPER FUNCTION UNTUK DOWNLOAD =====================
 def download_excel_helper(driver, unit_input, school_name, download_dir):
     """
-    Helper function untuk download file Excel dengan penanganan error yang lebih baik.
-    Digunakan oleh semua fungsi KIB.
+    Helper function untuk download file Excel dengan bypass Chrome Safe Browsing.
+    Menggunakan network interceptor CDP untuk menangkap URL download.
     """
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    
     unit_input.clear()
     unit_input.send_keys(school_name)
     time.sleep(2)
@@ -34,21 +37,134 @@ def download_excel_helper(driver, unit_input, school_name, download_dir):
         school_row.click()
         time.sleep(2)
         
-        # Catat file sebelum download
-        files_before = set(glob.glob(os.path.join(download_dir, "*.xls")))
+        # Ambil cookies dari Selenium untuk requests session
+        selenium_cookies = driver.get_cookies()
+        session = requests.Session()
+        for cookie in selenium_cookies:
+            session.cookies.set(cookie['name'], cookie['value'])
+        
+        # Dapatkan URL halaman saat ini
+        current_url = driver.current_url
+        
+        # Set headers seperti browser
+        headers = {
+            'User-Agent': driver.execute_script("return navigator.userAgent;"),
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Referer': current_url,
+            'Connection': 'keep-alive',
+        }
+        
+        # Enable network monitoring untuk capture download URL
+        driver.execute_cdp_cmd('Network.enable', {})
+        
+        # Clear performance logs
+        driver.execute_script("window.performance.clearResourceTimings();")
+        
+        # Simpan nama file untuk nanti
+        safe_school_name = "".join(c for c in school_name if c not in '\\/:*?"<>|')
+        file_path = os.path.join(download_dir, f"{safe_school_name}.xls")
         
         # Klik tombol Excel
         WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "span.l-btn-text.icon-excel")))
         excel_btn = driver.find_element(By.CSS_SELECTOR, "span.l-btn-text.icon-excel")
-        excel_btn.click()
         
-        # Tunggu file muncul di folder download
-        max_wait = 120  # Tambah waktu tunggu
+        # Klik tombol
+        excel_btn.click()
+        time.sleep(3)
+        
+        # Coba ambil URL dari performance entries (resource timing)
+        download_url = None
+        try:
+            resources = driver.execute_script("""
+                return window.performance.getEntriesByType('resource')
+                    .filter(r => r.name.includes('cetak') || r.name.includes('excel') || r.name.includes('laporan') || r.name.includes('.xls'))
+                    .map(r => r.name);
+            """)
+            if resources:
+                download_url = resources[-1]
+                print(f"Found download URL dari performance: {download_url}")
+        except Exception as e:
+            print(f"Gagal ambil performance entries: {e}")
+        
+        # Jika tidak dapat URL dari performance, coba dari network logs
+        if not download_url:
+            try:
+                logs = driver.get_log('performance')
+                for log in reversed(logs):
+                    message = json.loads(log['message'])
+                    if 'Network.responseReceived' in str(message):
+                        url = message.get('message', {}).get('params', {}).get('response', {}).get('url', '')
+                        if 'excel' in url.lower() or 'xls' in url.lower() or 'cetak' in url.lower():
+                            download_url = url
+                            print(f"Found download URL dari network log: {download_url}")
+                            break
+            except Exception as e:
+                print(f"Gagal ambil network logs: {e}")
+        
+        # Jika dapat download URL, download via requests
+        if download_url:
+            try:
+                response = session.get(
+                    download_url,
+                    headers=headers,
+                    verify=False,
+                    allow_redirects=True,
+                    timeout=60
+                )
+                
+                if response.status_code == 200:
+                    # Cek content type atau ukuran file
+                    content_type = response.headers.get('Content-Type', '').lower()
+                    
+                    if len(response.content) > 500:  # File harus lebih dari 500 bytes
+                        with open(file_path, 'wb') as f:
+                            f.write(response.content)
+                        print(f"Downloaded (via requests GET): {file_path}")
+                        return True
+            except Exception as e:
+                print(f"Gagal download via requests: {e}")
+        
+        # Fallback: Coba POST ke URL yang terlihat seperti endpoint cetak
+        print("Mencoba POST ke endpoint cetak...")
+        base_url = current_url.rsplit('/', 1)[0]
+        
+        # Coba beberapa kemungkinan endpoint
+        possible_endpoints = [
+            current_url.replace('cetak_lap_kib_a', 'excel_kib_a'),
+            current_url + '&cetak=excel',
+            base_url + '/excel_kib_a',
+        ]
+        
+        for endpoint in possible_endpoints:
+            try:
+                response = session.get(
+                    endpoint,
+                    headers=headers,
+                    verify=False,
+                    allow_redirects=True,
+                    timeout=30
+                )
+                
+                if response.status_code == 200 and len(response.content) > 500:
+                    # Cek magic bytes untuk Excel
+                    if response.content[:8] == b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1' or response.content[:4] == b'PK\x03\x04':
+                        with open(file_path, 'wb') as f:
+                            f.write(response.content)
+                        print(f"Downloaded (via endpoint guessing): {file_path}")
+                        return True
+            except:
+                continue
+        
+        # Fallback terakhir: Tunggu Chrome download
+        print("Fallback: Menunggu Chrome download file...")
+        files_before = set(glob.glob(os.path.join(download_dir, "*.xls")))
+        
+        max_wait = 30
         waited = 0
         downloaded_file = None
         
         while waited < max_wait:
-            # Cek apakah masih ada file yang sedang download
             crdownload_files = glob.glob(os.path.join(download_dir, "*.crdownload"))
             tmp_files = glob.glob(os.path.join(download_dir, "*.tmp"))
             
@@ -56,7 +172,6 @@ def download_excel_helper(driver, unit_input, school_name, download_dir):
                 files_after = set(glob.glob(os.path.join(download_dir, "*.xls")))
                 new_files = files_after - files_before
                 if new_files:
-                    # Tunggu sebentar untuk memastikan file selesai ditulis
                     time.sleep(1)
                     downloaded_file = max(new_files, key=os.path.getctime)
                     break
@@ -64,31 +179,29 @@ def download_excel_helper(driver, unit_input, school_name, download_dir):
             time.sleep(1)
             waited += 1
             
-            # Print progress setiap 10 detik
             if waited % 10 == 0:
                 print(f"Menunggu download {school_name}... ({waited}s)")
         
         if downloaded_file:
-            safe_school_name = "".join(c for c in school_name if c not in '\\/:*?"<>|')
-            new_name = f"{safe_school_name}.xls"
-            new_path = os.path.join(download_dir, new_name)
-            
-            # Hapus file lama jika ada
-            if os.path.exists(new_path) and downloaded_file != new_path:
-                os.remove(new_path)
-            
-            if downloaded_file != new_path:
-                os.rename(downloaded_file, new_path)
-            
-            print(f"Downloaded: {new_path}")
+            if downloaded_file != file_path:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                os.rename(downloaded_file, file_path)
+            print(f"Downloaded (via Chrome): {file_path}")
             return True
         else:
-            print(f"Warning: Timeout - Tidak dapat download file untuk {school_name}")
+            print(f"WARNING: Tidak dapat download file untuk {school_name}")
+            print("Chrome Safe Browsing masih memblokir download.")
+            print("SARAN: Coba nonaktifkan Safe Browsing di Chrome settings:")
+            print("  chrome://settings/security -> pilih 'No protection'")
             return False
             
     except Exception as e:
         print(f"Error download {school_name}: {e}")
+        import traceback
+        traceback.print_exc()
         return False
+
 
 CLI_MODE = False
 CLI_KIB = ''
@@ -319,28 +432,60 @@ def run_kib_a():
         "safebrowsing.disable_download_protection": True,
         "profile.default_content_setting_values.automatic_downloads": 1,
         "profile.content_settings.exceptions.automatic_downloads.*.setting": 1,
+        # Tambahan untuk disable semua proteksi download
+        "download.extensions_to_open": "xls,xlsx",
+        "profile.default_content_settings.popups": 0,
+        "safebrowsing.disable_extension_blacklist": True,
     }
     chrome_options.add_experimental_option("prefs", prefs)
-    chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
+    chrome_options.add_experimental_option("excludeSwitches", ["enable-logging", "enable-automation"])
+    chrome_options.add_experimental_option("useAutomationExtension", False)
     
-    # Opsi tambahan untuk mengizinkan download
+    # Opsi tambahan untuk mengizinkan download - LEBIH AGRESIF
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument('--disable-dev-shm-usage')
     chrome_options.add_argument('--disable-gpu')
     chrome_options.add_argument('--disable-web-security')
     chrome_options.add_argument('--allow-running-insecure-content')
-    chrome_options.add_argument('--disable-features=IsolateOrigins,site-per-process,DownloadBubble,DownloadBubbleV2')
+    chrome_options.add_argument('--disable-features=IsolateOrigins,site-per-process,DownloadBubble,DownloadBubbleV2,SafeBrowsingEnhancedProtection')
     chrome_options.add_argument('--disable-site-isolation-trials')
+    chrome_options.add_argument('--ignore-certificate-errors')
+    chrome_options.add_argument('--ignore-ssl-errors')
+    chrome_options.add_argument('--disable-extensions')
+    chrome_options.add_argument('--disable-popup-blocking')
+    # Disable Safe Browsing sepenuhnya
+    chrome_options.add_argument('--safebrowsing-disable-download-protection')
+    chrome_options.add_argument('--safebrowsing-disable-extension-blacklist')
     # chrome_options.add_argument('--headless')  # Dinonaktifkan sementara untuk debugging
     chrome_options.add_argument('--window-size=1920,1080')
     
     driver = webdriver.Chrome(options=chrome_options)
     
-    # Gunakan CDP untuk mengizinkan download
-    driver.execute_cdp_cmd("Page.setDownloadBehavior", {
-        "behavior": "allow",
-        "downloadPath": download_dir
-    })
+    # Gunakan CDP untuk mengizinkan download - VERSI MODERN
+    try:
+        # Metode 1: Browser.setDownloadBehavior (Chrome modern)
+        driver.execute_cdp_cmd("Browser.setDownloadBehavior", {
+            "behavior": "allow",
+            "downloadPath": download_dir,
+            "eventsEnabled": True
+        })
+    except:
+        pass
+    
+    try:
+        # Metode 2: Page.setDownloadBehavior (backup)
+        driver.execute_cdp_cmd("Page.setDownloadBehavior", {
+            "behavior": "allow",
+            "downloadPath": download_dir
+        })
+    except:
+        pass
+    
+    # Disable Safe Browsing via CDP
+    try:
+        driver.execute_cdp_cmd("Network.setBypassServiceWorker", {"bypass": True})
+    except:
+        pass
     
     login(driver)
     navigate_to_report(driver)
