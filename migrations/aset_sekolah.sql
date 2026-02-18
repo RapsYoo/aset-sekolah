@@ -118,7 +118,8 @@ CREATE TABLE `roles` (
 INSERT INTO `roles` (`id`, `name`, `created_at`) VALUES
 (1, 'admin', '2026-01-29 11:55:12'),
 (2, 'pegawai', '2026-01-29 11:55:12'),
-(3, 'supervisor', '2026-01-30 22:34:36');
+(3, 'supervisor', '2026-01-30 22:34:36'),
+(4, 'pengembang', '2026-02-16 07:54:00');
 
 -- --------------------------------------------------------
 
@@ -162,7 +163,8 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `name`, `email`, `password_hash`, `role_id`, `is_active`, `created_at`, `updated_at`) VALUES
 (1, 'Admin', 'admin@sekolah.com', '$2y$10$8xI/6T6bYZx5i1Z4zwSVhefy7qRgVQLcguXAwJUDuoXTyymJ7LNNu', 1, 1, '2026-01-29 11:55:12', '2026-01-29 11:55:12'),
-(2, 'Pegawai', 'pegawai@sekolah.com', '$2y$10$gKor3vI2ASr1o6t5C4f0AeUiGz6wxrR03vjfv6Fpazbp5qbGTPkQq', 2, 1, '2026-01-29 11:55:12', '2026-01-31 12:16:15');
+(2, 'Pegawai', 'pegawai@sekolah.com', '$2y$10$gKor3vI2ASr1o6t5C4f0AeUiGz6wxrR03vjfv6Fpazbp5qbGTPkQq', 2, 1, '2026-01-29 11:55:12', '2026-01-31 12:16:15'),
+(3, 'Pengembang', 'dev@sekolah.com', '$2y$10$zcZWndPFwbbZ38Gkwd9A0OPay60orkaWWAab1iGLUQuFknrByJGT.', 4, 1, '2026-02-16 07:54:00', '2026-02-16 07:54:00');
 
 -- --------------------------------------------------------
 

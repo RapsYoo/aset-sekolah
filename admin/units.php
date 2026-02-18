@@ -80,8 +80,12 @@ require_once '../inc/header.php';
 
 <!-- Daftar Unit -->
 <div class="card">
-    <div class="card-header">
+    <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0"><i class="fas fa-list me-2 text-primary"></i>Daftar Unit/Sekolah</h5>
+        <div class="input-group" style="max-width: 300px;">
+            <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
+            <input type="text" class="form-control border-start-0 bg-light" id="searchUnit" placeholder="Cari kode atau nama...">
+        </div>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -94,7 +98,7 @@ require_once '../inc/header.php';
                         <th class="pe-4 text-end">Aksi</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="unitTableBody">
                     <?php if (count($units) > 0): ?>
                         <?php foreach ($units as $unit): ?>
                             <tr>
@@ -155,6 +159,19 @@ require_once '../inc/header.php';
             }, false);
         }
     })();
+
+    // Search filter
+    const searchUnit = document.getElementById('searchUnit');
+    if (searchUnit) {
+        searchUnit.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#unitTableBody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        });
+    }
 </script>
 
 <?php require_once '../inc/footer.php'; ?>

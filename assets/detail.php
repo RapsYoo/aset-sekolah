@@ -77,13 +77,13 @@ require_once '../inc/header.php';
 <!-- Statistik Cards -->
 <div class="row mb-4">
     <div class="col-md-4">
-        <div class="stat-card">
-            <div class="stat-icon bg-primary text-white bg-opacity-100">
+        <div class="stat-card" style="background: white; color: var(--dark);">
+            <div class="stat-icon">
                 <i class="fas fa-wallet"></i>
             </div>
             <div class="stat-details">
-                <h6 class="text-white-50">Total Aset</h6>
-                <h3 class="text-white"><?php echo number_format($total_all, 0, ',', '.'); ?></h3>
+                <h6 class="text-muted">Total Aset</h6>
+                <h3><?php echo number_format($total_all, 0, ',', '.'); ?></h3>
             </div>
         </div>
     </div>
@@ -130,6 +130,40 @@ require_once '../inc/header.php';
             <div class="card-header">
                 <h6 class="mb-0"><i class="fas fa-list me-2"></i>Daftar Sekolah</h6>
             </div>
+            <!-- Filter Bar -->
+            <div class="card-body border-bottom py-3">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-5">
+                        <label class="form-label small text-muted mb-1"><i class="fas fa-search me-1"></i>Cari Sekolah</label>
+                        <input type="text" class="form-control form-control-sm" id="filterSearch" placeholder="Ketik nama sekolah atau kode unit...">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted mb-1"><i class="fas fa-filter me-1"></i>Range Total Aset</label>
+                        <select class="form-select form-select-sm" id="filterRange">
+                            <option value="all">Semua</option>
+                            <option value="0-100000000">< 100 Juta</option>
+                            <option value="100000000-500000000">100 Juta - 500 Juta</option>
+                            <option value="500000000-1000000000">500 Juta - 1 Miliar</option>
+                            <option value="1000000000-5000000000">1 Miliar - 5 Miliar</option>
+                            <option value="5000000000-">≥ 5 Miliar</option>
+                            <option value="custom">Custom Range...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4" id="customRangeWrap" style="display:none;">
+                        <label class="form-label small text-muted mb-1">Min - Max (Rp)</label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" class="form-control" id="filterMin" placeholder="Min" min="0">
+                            <span class="input-group-text">-</span>
+                            <input type="number" class="form-control" id="filterMax" placeholder="Max" min="0">
+                            <button class="btn btn-primary" type="button" id="btnApplyRange"><i class="fas fa-check"></i></button>
+                        </div>
+                    </div>
+                    <div class="col-md-4" id="filterInfoWrap" style="display:none;">
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2" id="filterInfo"></span>
+                        <button class="btn btn-sm btn-link text-danger p-0 ms-2" id="btnClearFilter" title="Hapus filter"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
+            </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0 align-middle">
@@ -143,13 +177,13 @@ require_once '../inc/header.php';
                                 <th class="pe-4 text-end">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="schoolTableBody">
                             <?php if (count($assets) > 0): ?>
                                 <?php foreach ($assets as $index => $asset): ?>
                                     <?php
                                     $percentage = $total_all > 0 ? ($asset['total'] / $total_all) * 100 : 0;
                                     ?>
-                                    <tr>
+                                    <tr data-total="<?php echo $asset['total']; ?>" data-name="<?php echo escape(strtolower($asset['unit_name'] ?? '')); ?>" data-code="<?php echo escape(strtolower($asset['unit_code'] ?? '')); ?>">
                                         <td class="ps-4"><?php echo $index + 1; ?></td>
                                         <td>
                                             <div class="fw-bold"><?php echo escape($asset['unit_name'] ?? 'N/A'); ?></div>
@@ -330,4 +364,117 @@ require_once '../inc/header.php';
             }
         });
     }
+
+    // ===== Filtering Logic =====
+    (function() {
+        const searchInput = document.getElementById('filterSearch');
+        const rangeSelect = document.getElementById('filterRange');
+        const customWrap = document.getElementById('customRangeWrap');
+        const filterInfoWrap = document.getElementById('filterInfoWrap');
+        const filterInfo = document.getElementById('filterInfo');
+        const minInput = document.getElementById('filterMin');
+        const maxInput = document.getElementById('filterMax');
+        const btnApply = document.getElementById('btnApplyRange');
+        const btnClear = document.getElementById('btnClearFilter');
+        const tbody = document.getElementById('schoolTableBody');
+        if (!tbody) return;
+
+        let activeMin = null, activeMax = null;
+
+        function formatRp(n) {
+            return 'Rp ' + Number(n).toLocaleString('id-ID');
+        }
+
+        function applyFilters() {
+            const query = (searchInput ? searchInput.value.toLowerCase() : '');
+            const rows = tbody.querySelectorAll('tr[data-total]');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const name = row.dataset.name || '';
+                const code = row.dataset.code || '';
+                const total = parseFloat(row.dataset.total) || 0;
+
+                // Text filter
+                const matchText = !query || name.includes(query) || code.includes(query);
+
+                // Range filter
+                let matchRange = true;
+                if (activeMin !== null) matchRange = matchRange && total >= activeMin;
+                if (activeMax !== null) matchRange = matchRange && total <= activeMax;
+
+                if (matchText && matchRange) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Show info badge
+            if (activeMin !== null || activeMax !== null) {
+                let label = '';
+                if (activeMin !== null && activeMax !== null) {
+                    label = formatRp(activeMin) + ' - ' + formatRp(activeMax);
+                } else if (activeMin !== null) {
+                    label = '≥ ' + formatRp(activeMin);
+                } else {
+                    label = '≤ ' + formatRp(activeMax);
+                }
+                filterInfo.textContent = label + ' (' + visibleCount + ' hasil)';
+                filterInfoWrap.style.display = '';
+            } else if (query) {
+                filterInfo.textContent = visibleCount + ' hasil ditemukan';
+                filterInfoWrap.style.display = '';
+            } else {
+                filterInfoWrap.style.display = 'none';
+            }
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', applyFilters);
+        }
+
+        if (rangeSelect) {
+            rangeSelect.addEventListener('change', function() {
+                const val = this.value;
+                if (val === 'custom') {
+                    customWrap.style.display = '';
+                    return;
+                }
+                customWrap.style.display = 'none';
+                if (val === 'all') {
+                    activeMin = null;
+                    activeMax = null;
+                } else {
+                    const parts = val.split('-');
+                    activeMin = parts[0] ? parseFloat(parts[0]) : null;
+                    activeMax = parts[1] ? parseFloat(parts[1]) : null;
+                }
+                applyFilters();
+            });
+        }
+
+        if (btnApply) {
+            btnApply.addEventListener('click', function() {
+                activeMin = minInput.value ? parseFloat(minInput.value) : null;
+                activeMax = maxInput.value ? parseFloat(maxInput.value) : null;
+                applyFilters();
+            });
+        }
+
+        if (btnClear) {
+            btnClear.addEventListener('click', function() {
+                activeMin = null;
+                activeMax = null;
+                if (searchInput) searchInput.value = '';
+                if (rangeSelect) rangeSelect.value = 'all';
+                if (minInput) minInput.value = '';
+                if (maxInput) maxInput.value = '';
+                customWrap.style.display = 'none';
+                filterInfoWrap.style.display = 'none';
+                applyFilters();
+            });
+        }
+    })();
 </script>

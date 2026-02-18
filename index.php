@@ -74,19 +74,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </button>
                     </div>
 
-                    <div class="alert alert-light border-0 small text-muted text-center">
-                        <i class="fas fa-info-circle me-1"></i> Demo: <strong>admin@sekolah.com</strong> / <strong>admin123</strong>
-                    </div>
                 </form>
+
             </div>
 
             <div class="login-right d-none d-md-flex">
                 <div class="login-right-content">
-                    <div class="mb-4">
-                        <i class="fas fa-chart-line fa-3x"></i>
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <img src="<?php echo APP_URL; ?>/asetgambar/logo_login.png" alt="Logo" style="width: 70px; height: 70px; object-fit: contain;">
+                        <div>
+                            <h2 class="fw-bold mb-0" style="letter-spacing: 2px;">SIMBAKDA</h2>
+                            <p class="mb-0 small" style="letter-spacing: 1px;">PROVINSI SULAWESI SELATAN</p>
+                        </div>
                     </div>
-                    <h2 class="fw-bold">Sistem Monitoring Aset</h2>
-                    <p class="lead mb-0">Kelola dan pantau aset sekolah dengan mudah, cepat, dan akurat.</p>
+                    <p class="lead mb-0 mt-3">Kelola dan pantau aset sekolah dengan mudah, cepat, dan akurat.</p>
                 </div>
             </div>
         </div>

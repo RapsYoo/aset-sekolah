@@ -25,7 +25,7 @@ $total_aset = $total_aset_bulan_ini['total'] ?? 0;
 
 // Query total pengguna
 $total_users = db_fetch_one(
-    "SELECT COUNT(*) as count FROM users WHERE is_active = 1"
+    "SELECT COUNT(*) as count FROM users u LEFT JOIN roles r ON u.role_id = r.id WHERE u.is_active = 1 AND r.name != 'pengembang'"
 );
 $total_users_count = $total_users['count'] ?? 0;
 

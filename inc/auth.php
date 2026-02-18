@@ -38,9 +38,23 @@ function is_logged_in() {
 }
 
 /**
- * Check apakah user adalah admin
+ * Check apakah user adalah pengembang (developer)
+ */
+function is_pengembang() {
+    return isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'pengembang';
+}
+
+/**
+ * Check apakah user adalah admin (atau pengembang yang punya akses admin)
  */
 function is_admin() {
+    return isset($_SESSION['user_role']) && ($_SESSION['user_role'] === 'admin' || $_SESSION['user_role'] === 'pengembang');
+}
+
+/**
+ * Check apakah user murni admin (bukan pengembang)
+ */
+function is_real_admin() {
     return isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
 }
 

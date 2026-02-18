@@ -41,8 +41,14 @@ if (!isset($user) && function_exists('current_user')) {
     <div class="wrapper">
         <!-- Sidebar -->
         <nav class="sidebar">
-            <div class="sidebar-brand">
-                <i class="fas fa-school me-2"></i> SIM Aset
+            <div class="sidebar-brand" style="padding: 15px 12px;">
+                <div class="d-flex align-items-center gap-2">
+                    <img src="<?php echo APP_URL; ?>/asetgambar/logo_login.png" alt="Logo" style="width: 36px; height: 36px; object-fit: contain;">
+                    <div style="line-height: 1.2;">
+                        <span class="fw-bold" style="font-size: 1rem; letter-spacing: 1px;">SIMBAKDA</span><br>
+                        <span style="font-size: 0.55rem; letter-spacing: 0.5px; opacity: 0.8;">PROVINSI SULAWESI SELATAN</span>
+                    </div>
+                </div>
             </div>
 
             <div class="sidebar-menu">
@@ -54,10 +60,24 @@ if (!isset($user) && function_exists('current_user')) {
                 </a>
 
                 <a href="<?php echo APP_URL; ?>/assets/index.php" class="sidebar-link <?php echo is_active('assets/'); ?>">
-                    <i class="fas fa-boxes"></i> <!-- Changed icon to be more specific -->
+                    <i class="fas fa-boxes"></i>
                     <span>Data Aset</span>
                 </a>
 
+                <?php if (function_exists('is_pengembang') && is_pengembang()): ?>
+                    <div class="sidebar-divider"></div>
+                    <div class="sidebar-heading">Pengembangan</div>
+
+                    <a href="<?php echo APP_URL; ?>/items/index.php" class="sidebar-link <?php echo is_active('items/'); ?>">
+                        <i class="fas fa-box-open"></i>
+                        <span>Kelola Barang</span>
+                    </a>
+
+                    <a href="<?php echo APP_URL; ?>/automation/index.php" class="sidebar-link <?php echo is_active('automation/'); ?>">
+                        <i class="fas fa-robot"></i>
+                        <span>Automation</span>
+                    </a>
+                <?php endif; ?>
 
                 <?php if (function_exists('is_admin') && is_admin()): ?>
                     <div class="sidebar-divider"></div>
@@ -117,10 +137,6 @@ if (!isset($user) && function_exists('current_user')) {
                         <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg">
                             <li><h6 class="dropdown-header">Login sebagai <?php echo escape($user['role'] ?? ''); ?></h6></li>
                             <li><a class="dropdown-item" href="<?php echo APP_URL; ?>/profile.php"><i class="fas fa-user me-2"></i> Profil</a></li>
-                            <li><a class="dropdown-item" href="<?php echo APP_URL; ?>/items/index.php"><i class="fas fa-box-open me-2"></i> Kelola Barang</a></li>
-                            <?php if (function_exists('is_admin') && is_admin()): ?>
-                            <li><a class="dropdown-item" href="<?php echo APP_URL; ?>/automation/index.php"><i class="fas fa-robot me-2"></i> Automation</a></li>
-                            <?php endif; ?>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item text-danger" href="<?php echo APP_URL; ?>/logout.php"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
                         </ul>

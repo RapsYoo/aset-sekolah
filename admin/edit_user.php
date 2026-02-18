@@ -7,14 +7,14 @@ require_admin();
 $id = (int)($_GET['id'] ?? 0);
 $user_data = db_fetch_one("SELECT u.*, r.name as role_name FROM users u LEFT JOIN roles r ON u.role_id = r.id WHERE u.id = ?", 'i', [$id]);
 
-if (!$user_data) {
+if (!$user_data || $user_data['role_name'] === 'pengembang') {
     header("Location: users.php");
     exit();
 }
 
 $error = '';
 $success = '';
-$roles = db_fetch_all("SELECT * FROM roles");
+$roles = db_fetch_all("SELECT * FROM roles WHERE name != 'pengembang'");
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {

@@ -40,11 +40,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 $users = db_fetch_all(
     "SELECT u.*, r.name as role_name FROM users u 
      LEFT JOIN roles r ON u.role_id = r.id 
+     WHERE r.name != 'pengembang'
      ORDER BY u.created_at DESC"
 );
 
-// Ambil roles
-$roles = db_fetch_all("SELECT * FROM roles");
+// Ambil roles (sembunyikan pengembang)
+$roles = db_fetch_all("SELECT * FROM roles WHERE name != 'pengembang'");
 
 $page_title = 'Manajemen User';
 require_once '../inc/header.php';
@@ -107,8 +108,12 @@ require_once '../inc/header.php';
 
 <!-- Daftar User -->
 <div class="card">
-    <div class="card-header">
+    <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0"><i class="fas fa-list me-2 text-primary"></i>Daftar Pengguna</h5>
+        <div class="input-group" style="max-width: 300px;">
+            <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
+            <input type="text" class="form-control border-start-0 bg-light" id="searchUser" placeholder="Cari nama, email, role...">
+        </div>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -123,7 +128,7 @@ require_once '../inc/header.php';
                         <th class="pe-4 text-end">Aksi</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="userTableBody">
                     <?php foreach ($users as $u): ?>
                         <tr>
                             <td class="ps-4">
@@ -221,6 +226,19 @@ require_once '../inc/header.php';
             }, false);
         }
     })();
+
+    // Search filter
+    const searchUser = document.getElementById('searchUser');
+    if (searchUser) {
+        searchUser.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#userTableBody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        });
+    }
 </script>
 
 <?php require_once '../inc/footer.php'; ?>

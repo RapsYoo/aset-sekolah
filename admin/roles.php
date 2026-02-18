@@ -14,6 +14,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $name = strtolower(trim($_POST['name'] ?? ''));
         if (empty($name)) {
             $error = 'Nama role harus diisi';
+        } elseif ($name === 'pengembang') {
+            $error = 'Nama role tidak valid';
         } elseif (!preg_match('/^[a-z0-9_\-]+$/', $name)) {
             $error = 'Nama role hanya boleh huruf kecil, angka, underscore atau strip';
         } else {
@@ -33,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
-$roles = db_fetch_all("SELECT * FROM roles ORDER BY id ASC");
+$roles = db_fetch_all("SELECT * FROM roles WHERE name != 'pengembang' ORDER BY id ASC");
 $page_title = 'Kelola Role';
 require_once '../inc/header.php';
 ?>

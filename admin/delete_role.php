@@ -20,7 +20,7 @@ if (!$role) {
 }
 
 $name = strtolower($role['name']);
-if (in_array($name, ['admin', 'pegawai'])) {
+if (in_array($name, ['admin', 'pegawai', 'pengembang'])) {
     $_SESSION['flash_message'] = 'Role default tidak dapat dihapus';
     $_SESSION['flash_type'] = 'warning';
     header("Location: roles.php");
