@@ -357,6 +357,11 @@ require_once '../inc/header.php';
                             <tbody id="previewTableBody"></tbody>
                         </table>
                     </div>
+                    <div class="text-center mt-2" id="loadMoreWrap" style="display:none;">
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="btnLoadMore">
+                            <i class="fas fa-chevron-down me-1"></i>Tampilkan Lebih Banyak
+                        </button>
+                    </div>
                     <div class="d-flex justify-content-between align-items-center mt-2 px-1">
                         <span class="text-muted small" id="previewTotalItems"></span>
                         <span class="fw-bold text-success" id="previewTotalHarga"></span>
@@ -474,6 +479,13 @@ require_once '../inc/header.php';
     // Units data from PHP
     const dbUnits = <?php echo $unitsJson; ?>;
 
+    // ── Pagination State ────────────────────────────
+    const PAGE_SIZE = 25;
+    let allItems = [];           // semua item dari parse
+    let filteredItems = [];      // item setelah filter search
+    let currentPage = 0;
+    let currentHasJumlahCol = true;
+
     // ── Upload Zone Events ──────────────────────────
     uploadZone.addEventListener('click', () => fileInput.click());
 
@@ -542,7 +554,7 @@ require_once '../inc/header.php';
         previewSection.classList.remove('show');
 
         const formData = new FormData();
-        formData.append('excel_file', file);
+        formData.append('excel', file);
 
         fetch('parse_excel.php', {
             method: 'POST',
@@ -572,6 +584,20 @@ require_once '../inc/header.php';
         // Info Grid
         const infoGrid = document.getElementById('infoGrid');
         infoGrid.innerHTML = '';
+        
+        // Tambahkan badge KIB Type di awal
+        if (data.kib_name) {
+            infoGrid.innerHTML += `
+                <div class="info-item" style="grid-column: 1 / -1;">
+                    <div class="info-label">Jenis KIB</div>
+                    <div class="info-value">
+                        <span class="badge bg-primary" style="font-size: 0.9rem; padding: 6px 12px;">
+                            ${escHtml(data.kib_name)}
+                        </span>
+                    </div>
+                </div>`;
+        }
+        
         if (data.info) {
             for (const [key, val] of Object.entries(data.info)) {
                 infoGrid.innerHTML += `
@@ -584,7 +610,9 @@ require_once '../inc/header.php';
 
         // Stats
         const stats = document.getElementById('previewStats');
-        stats.innerHTML = `
+        const hasJumlahCol = data.has_jumlah_column !== false;
+        
+        let statsHtml = `
             <div class="preview-stat">
                 <div class="stat-icon">📦</div>
                 <div class="stat-label">Jenis Barang</div>
@@ -594,35 +622,58 @@ require_once '../inc/header.php';
                 <div class="stat-icon">💰</div>
                 <div class="stat-label">Total Nilai</div>
                 <div class="stat-value" style="font-size:0.95rem;">${data.jumlah_harga_formatted}</div>
-            </div>
+            </div>`;
+        
+        // Hanya tampilkan Total Unit jika KIB memiliki kolom jumlah
+        if (hasJumlahCol && data.total_unit > 0) {
+            statsHtml += `
             <div class="preview-stat">
                 <div class="stat-icon">🔢</div>
                 <div class="stat-label">Total Unit</div>
                 <div class="stat-value">${data.total_unit.toLocaleString('id-ID')}</div>
             </div>`;
-
-        // Table
-        const tbody = document.getElementById('previewTableBody');
-        tbody.innerHTML = '';
-        if (data.items && data.items.length > 0) {
-            data.items.forEach(item => {
-                tbody.innerHTML += `
-                <tr>
-                    <td class="text-center fw-semibold text-muted">${escHtml(item.no)}</td>
-                    <td class="fw-semibold">${escHtml(item.nama)}</td>
-                    <td><small>${escHtml(item.kode)}</small></td>
-                    <td><small>${escHtml(item.register)}</small></td>
-                    <td><small>${escHtml(item.judul)}</small></td>
-                    <td class="text-center fw-bold text-primary">${escHtml(item.jumlah)}</td>
-                    <td>${item.tahun ? '<span class="badge-tahun">' + escHtml(item.tahun) + '</span>' : ''}</td>
-                    <td>${item.asal ? '<span class="badge-asal">' + escHtml(item.asal) + '</span>' : ''}</td>
-                    <td class="td-harga">${escHtml(item.harga)}</td>
-                    <td><small>${escHtml(item.kab)}</small></td>
-                </tr>`;
-            });
-        } else {
-            tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted py-3">Tidak ada data barang.</td></tr>';
         }
+        
+        stats.innerHTML = statsHtml;
+
+        // Table - update header dan body sesuai jenis KIB
+        // hasJumlahCol sudah dideklarasi di atas (line stats)
+        
+        // Update table header
+        const thead = document.querySelector('#previewTableBody').closest('table').querySelector('thead tr');
+        if (hasJumlahCol) {
+            thead.innerHTML = `
+                <th>No</th>
+                <th>Nama Barang</th>
+                <th>Kode</th>
+                <th>Register</th>
+                <th>Judul/Ket</th>
+                <th class="text-center">Jumlah</th>
+                <th>Tahun</th>
+                <th>Asal Usul</th>
+                <th>Harga</th>
+                <th>Kab/Kota</th>`;
+        } else {
+            thead.innerHTML = `
+                <th>No</th>
+                <th>Nama Barang</th>
+                <th>Kode</th>
+                <th>Register</th>
+                <th>Judul/Ket</th>
+                <th>Tahun</th>
+                <th>Asal Usul</th>
+                <th>Harga</th>
+                <th>Kab/Kota</th>`;
+        }
+
+        // Simpan data items untuk pagination
+        allItems = data.items || [];
+        filteredItems = allItems;
+        currentPage = 0;
+        currentHasJumlahCol = hasJumlahCol;
+
+        // Render halaman pertama
+        renderTablePage(true);
 
         // Footer
         document.getElementById('previewTotalItems').textContent = data.total_barang + ' jenis barang';
@@ -631,6 +682,64 @@ require_once '../inc/header.php';
         // Show preview
         previewSection.classList.add('show');
     }
+
+    // ── Render Table with Pagination ────────────────
+    function renderTablePage(reset) {
+        const tbody = document.getElementById('previewTableBody');
+        const loadMoreWrap = document.getElementById('loadMoreWrap');
+
+        if (reset) {
+            tbody.innerHTML = '';
+            currentPage = 0;
+        }
+
+        const start = currentPage * PAGE_SIZE;
+        const end = Math.min(start + PAGE_SIZE, filteredItems.length);
+
+        if (filteredItems.length === 0) {
+            const colspanCount = currentHasJumlahCol ? 10 : 9;
+            tbody.innerHTML = `<tr><td colspan="${colspanCount}" class="text-center text-muted py-3">Tidak ada data barang.</td></tr>`;
+            loadMoreWrap.style.display = 'none';
+            return;
+        }
+
+        // Build HTML string dulu, baru assign sekali (hindari innerHTML += dalam loop)
+        let html = '';
+        for (let i = start; i < end; i++) {
+            const item = filteredItems[i];
+            const jumlahCell = currentHasJumlahCol ?
+                `<td class="text-center fw-bold text-primary">${escHtml(item.jumlah)}</td>` : '';
+            html += `<tr>
+                <td class="text-center fw-semibold text-muted">${escHtml(item.no)}</td>
+                <td class="fw-semibold">${escHtml(item.nama)}</td>
+                <td><small>${escHtml(item.kode)}</small></td>
+                <td><small>${escHtml(item.register)}</small></td>
+                <td><small>${escHtml(item.judul)}</small></td>
+                ${jumlahCell}
+                <td>${item.tahun ? '<span class="badge-tahun">' + escHtml(item.tahun) + '</span>' : ''}</td>
+                <td>${item.asal ? '<span class="badge-asal">' + escHtml(item.asal) + '</span>' : ''}</td>
+                <td class="td-harga">${escHtml(item.harga)}</td>
+                <td><small>${escHtml(item.kab)}</small></td>
+            </tr>`;
+        }
+        tbody.insertAdjacentHTML('beforeend', html);
+
+        currentPage++;
+
+        // Tampilkan/sembunyikan tombol "Load More"
+        if (end < filteredItems.length) {
+            loadMoreWrap.style.display = 'block';
+            document.getElementById('btnLoadMore').textContent =
+                `Tampilkan Lebih Banyak (${end} / ${filteredItems.length})`;
+        } else {
+            loadMoreWrap.style.display = 'none';
+        }
+    }
+
+    // ── Load More Button ────────────────────────────
+    document.getElementById('btnLoadMore').addEventListener('click', function() {
+        renderTablePage(false);
+    });
 
     // ── Auto Fill Form ──────────────────────────────
     function autoFillForm(data) {
@@ -682,13 +791,24 @@ require_once '../inc/header.php';
         }
     }
 
-    // ── Preview Search ──────────────────────────────
+    // ── Preview Search (with debounce) ────────────────
+    let searchTimer = null;
     document.getElementById('previewSearch').addEventListener('input', function() {
-        const q = this.value.toLowerCase();
-        const rows = document.querySelectorAll('#previewTableBody tr');
-        rows.forEach(row => {
-            row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
-        });
+        clearTimeout(searchTimer);
+        const q = this.value.toLowerCase().trim();
+        searchTimer = setTimeout(function() {
+            if (q === '') {
+                filteredItems = allItems;
+            } else {
+                filteredItems = allItems.filter(item => {
+                    const text = [item.no, item.nama, item.kode, item.register, item.judul,
+                                  item.jumlah, item.tahun, item.asal, item.harga, item.kab]
+                                 .join(' ').toLowerCase();
+                    return text.includes(q);
+                });
+            }
+            renderTablePage(true);
+        }, 250);
     });
 
 

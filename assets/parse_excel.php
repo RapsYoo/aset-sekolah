@@ -1,20 +1,122 @@
 <?php
 /**
- * AJAX Endpoint: Parse file Excel KIB (HTML-based .xls)
- * Menerima file upload, parsing dengan DOMDocument, return JSON.
+ * parse_excel.php - Universal KIB Parser (A-F) untuk Auto-Fill Form
+ * Endpoint AJAX untuk parsing file Excel KIB
  */
-require_once '../inc/auth.php';
-require_once '../inc/helpers.php';
-
-require_login();
-require_can_edit();
 
 header('Content-Type: application/json; charset=utf-8');
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
 
-// ─────────────────────────────────────────────────
-//  FUNGSI PARSER (dari scraping/index.php)
-// ─────────────────────────────────────────────────
+require_once '../inc/auth.php';
+require_once '../inc/storage.php';
 
+require_login();
+
+// ═══════════════════════════════════════════════════════════════════
+//  KONFIGURASI STRUKTUR KIB
+// ═══════════════════════════════════════════════════════════════════
+
+const KIB_STRUCTURES = [
+    'A' => [
+        'name'       => 'KIB A — TANAH',
+        'identifier' => 'TANAH',
+        'cols'       => [
+            'nama'     => 1,
+            'kode'     => 2,
+            'register' => 3,
+            'judul'    => 4,
+            'jumlah'   => null,
+            'tahun'    => 5,
+            'asal'     => 12,
+            'harga'    => 13,
+            'kab'      => 7,
+        ]
+    ],
+    'B' => [
+        'name'       => 'KIB B — PERALATAN DAN MESIN',
+        'identifier' => 'PERALATAN DAN MESIN',
+        'cols'       => [
+            'nama'     => 2,
+            'kode'     => 1,
+            'register' => 3,
+            'judul'    => 4,
+            'jumlah'   => 15,
+            'tahun'    => 7,
+            'asal'     => 13,
+            'harga'    => 16,
+            'kab'      => 14,
+        ]
+    ],
+    'C' => [
+        'name'       => 'KIB C — GEDUNG DAN BANGUNAN',
+        'identifier' => 'GEDUNG DAN BANGUNAN',
+        'cols'       => [
+            'nama'     => 1,
+            'kode'     => 3,
+            'register' => 5,
+            'judul'    => 1,
+            'jumlah'   => null,
+            'tahun'    => 17,
+            'asal'     => 18,
+            'harga'    => 19,
+            'kab'      => 8,
+        ]
+    ],
+    'D' => [
+        'name'       => 'KIB D — JALAN, JEMBATAN, IRIGASI',
+        'identifier' => 'JALAN',
+        'cols'       => [
+            'nama'     => 1,
+            'kode'     => 2,
+            'register' => 3,
+            'judul'    => 5,
+            'jumlah'   => null,
+            'tahun'    => 14,
+            'asal'     => 15,
+            'harga'    => 16,
+            'kab'      => 8,
+        ]
+    ],
+    'E' => [
+        'name'       => 'KIB E — ASET TETAP LAINNYA',
+        'identifier' => 'ASET TETAP LAINNYA',
+        'cols'       => [
+            'nama'     => 1,
+            'kode'     => 2,
+            'register' => 3,
+            'judul'    => 4,
+            'jumlah'   => 13,
+            'tahun'    => 14,
+            'asal'     => 15,
+            'harga'    => 16,
+            'kab'      => 18,
+        ]
+    ],
+    'F' => [
+        'name'       => 'KIB F — KONSTRUKSI DALAM PENGERJAAN',
+        'identifier' => 'KONSTRUKSI DALAM PENGERJAAN',
+        'cols'       => [
+            'nama'     => 1,
+            'kode'     => 2,
+            'register' => 10,
+            'judul'    => 5,
+            'jumlah'   => null,
+            'tahun'    => 8,
+            'asal'     => 11,
+            'harga'    => 12,
+            'kab'      => 6,
+        ]
+    ],
+];
+
+// ═══════════════════════════════════════════════════════════════════
+//  FUNGSI PARSER
+// ═══════════════════════════════════════════════════════════════════
+
+/**
+ * Parse file XLS (HTML) dan ekstrak data KIB
+ */
 function parseKibExcel(string $filepath): array
 {
     $html = file_get_contents($filepath);
@@ -39,21 +141,59 @@ function parseKibExcel(string $filepath): array
         throw new RuntimeException("Struktur tabel tidak dikenali.");
     }
 
+    // Deteksi Jenis KIB
     $infoTable = $tables->item(0);
+    $kibType   = detectKibType($xpath, $infoTable);
+    
+    if (!$kibType) {
+        throw new RuntimeException("Jenis KIB tidak dikenali dari judul tabel.");
+    }
+
+    // Ekstrak Info Sekolah
     $info = extractInfoSekolah($xpath, $infoTable);
 
+    // Ekstrak Data Barang
     $dataTable = $tables->item(1);
-    [$header, $items, $jumlahHarga, $totalBarang] = extractDataBarang($xpath, $dataTable);
+    [$items, $jumlahHarga, $totalBarang, $totalUnit] = extractDataBarang($xpath, $dataTable, $kibType);
 
     return [
+        'kib_type'     => $kibType,
+        'kib_name'     => KIB_STRUCTURES[$kibType]['name'],
         'info'         => $info,
-        'header'       => $header,
         'items'        => $items,
         'jumlah_harga' => $jumlahHarga,
         'total_barang' => $totalBarang,
+        'total_unit'   => $totalUnit,
     ];
 }
 
+/**
+ * Deteksi jenis KIB dari judul tabel pertama
+ */
+function detectKibType(DOMXPath $xpath, DOMNode $table): ?string
+{
+    $rows = $xpath->query('.//tr', $table);
+    if ($rows->length === 0) return null;
+
+    $firstRow = $rows->item(0);
+    $cells    = $xpath->query('.//td|.//th', $firstRow);
+    
+    if ($cells->length === 0) return null;
+    
+    $title = strtoupper(trim($cells->item(0)->textContent));
+
+    foreach (KIB_STRUCTURES as $type => $config) {
+        if (strpos($title, $config['identifier']) !== false) {
+            return $type;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Ekstrak informasi sekolah dari tabel pertama
+ */
 function extractInfoSekolah(DOMXPath $xpath, DOMNode $table): array
 {
     $info = [];
@@ -61,6 +201,7 @@ function extractInfoSekolah(DOMXPath $xpath, DOMNode $table): array
 
     foreach ($rows as $row) {
         $cells = $xpath->query('.//td|.//th', $row);
+        
         if ($cells->length >= 3) {
             $key   = trim($cells->item(1)->textContent);
             $value = trim($cells->item(2)->textContent);
@@ -72,15 +213,19 @@ function extractInfoSekolah(DOMXPath $xpath, DOMNode $table): array
             $key   = trim($cells->item(0)->textContent);
             $value = trim($cells->item(1)->textContent);
             $value = ltrim($value, ': ');
-            if ($key !== '') {
+            if ($key !== '' && $key !== 'SULAWESI SELATAN') {
                 $info[$key] = $value;
             }
         }
     }
+    
     return $info;
 }
 
-function extractDataBarang(DOMXPath $xpath, DOMNode $table): array
+/**
+ * Ekstrak data barang berdasarkan jenis KIB
+ */
+function extractDataBarang(DOMXPath $xpath, DOMNode $table, string $kibType): array
 {
     $allRows = $xpath->query('.//tr', $table);
     $matrix  = [];
@@ -94,75 +239,75 @@ function extractDataBarang(DOMXPath $xpath, DOMNode $table): array
         $matrix[] = $rowValues;
     }
 
-    $header        = [];
-    $items         = [];
-    $jumlahHarga   = '0';
-    $totalBarang   = 0;
+    $items       = [];
+    $jumlahHarga = '0';
+    $totalBarang = 0;
+    $totalUnit   = 0;
+    
+    $config      = KIB_STRUCTURES[$kibType];
 
+    // Deteksi baris data dimulai (skip header)
     $dataStartRow = 0;
     foreach ($matrix as $idx => $row) {
-        if (!empty($row[0]) && strtolower($row[0]) === 'no') {
-            $header       = $row;
-            $dataStartRow = $idx + 1;
-            
-            // Cek apakah baris berikutnya adalah penomoran kolom (1, 2, 3, ...)
-            if (isset($matrix[$idx + 1])) {
-                $nextRow = $matrix[$idx + 1];
-                // Hitung berapa banyak cell yang berisi angka berurutan
-                $seqCount = 0;
-                foreach ($nextRow as $ci => $cell) {
-                    if (trim($cell) === (string)($ci + 1)) {
-                        $seqCount++;
-                    }
-                }
-                // Jika >= 3 cell berurutan (1,2,3...), ini baris penomoran kolom
-                if ($seqCount >= 3) {
-                    $dataStartRow = $idx + 2;
-                }
+        if (!empty($row) && count($row) > 5) {
+            // Cari baris penomor kolom: 1, 2, 3, 4, ...
+            if ($row[0] === '1' && $row[1] === '2' && $row[2] === '3') {
+                $dataStartRow = $idx + 1;
+                break;
             }
-            break;
         }
     }
 
+    // Ambil baris data
     for ($i = $dataStartRow; $i < count($matrix); $i++) {
         $row = $matrix[$i];
+        
         if (empty($row) || (count($row) === 1 && trim($row[0]) === '')) {
             continue;
         }
 
+        // Deteksi baris JUMLAH
         if (isset($row[0]) && strtolower(trim($row[0])) === 'jumlah') {
-            foreach ($row as $cell) {
-                $clean = str_replace([',', '.'], '', $cell);
-                if (is_numeric($clean) && strlen($clean) > 3) {
-                    $jumlahHarga = $cell;
-                    break;
+            if ($kibType === 'B') {
+                // Format KIB B: Jumlah | totalUnit | totalHarga
+                $totalUnit   = isset($row[1]) ? $row[1] : '0';
+                $jumlahHarga = isset($row[2]) ? $row[2] : '0';
+            } else {
+                // Format lainnya: Jumlah | totalHarga
+                foreach ($row as $cell) {
+                    $clean = str_replace([',', '.'], '', $cell);
+                    if (is_numeric($clean) && strlen($clean) > 3) {
+                        $jumlahHarga = $cell;
+                        break;
+                    }
                 }
             }
             continue;
         }
 
-        if (isset($row[0]) && is_numeric($row[0])) {
-            // Skip baris yang terlihat seperti penomoran kolom (semua cell = angka kecil berurutan)
-            $isNumberingRow = true;
-            $numericCells = 0;
-            foreach ($row as $ci => $cell) {
-                if (trim($cell) === (string)($ci + 1)) {
-                    $numericCells++;
-                }
-            }
-            if ($numericCells >= 3 && $numericCells >= count($row) * 0.5) {
-                continue; // skip baris penomoran
-            }
-            
+        // Hanya ambil baris data (diawali angka)
+        if (isset($row[0]) && is_numeric($row[0]) && intval($row[0]) > 0) {
             $items[] = $row;
             $totalBarang++;
+            
+            // Hitung total unit jika ada kolom jumlah
+            if ($config['cols']['jumlah'] !== null && isset($row[$config['cols']['jumlah']])) {
+                $jml = $row[$config['cols']['jumlah']];
+                $clean = str_replace([',', '.'], '', $jml);
+                if (is_numeric($clean) && intval($clean) < 100000) {
+                    $totalUnit += intval($clean);
+                }
+            }
         }
     }
 
-    return [$header, $items, $jumlahHarga, $totalBarang];
+    return [$items, $jumlahHarga, $totalBarang, $totalUnit];
 }
 
-function formatRupiahParse(string $raw): string
+/**
+ * Format angka rupiah
+ */
+function formatRupiah(string $raw): string
 {
     $raw = trim($raw);
     $numeric = (float) str_replace(',', '', $raw);
@@ -170,243 +315,202 @@ function formatRupiahParse(string $raw): string
     return 'Rp ' . number_format($numeric, 0, ',', '.');
 }
 
-// ─────────────────────────────────────────────────
-//  PROSES UPLOAD AJAX
-// ─────────────────────────────────────────────────
-
-if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_FILES['excel_file'])) {
-    echo json_encode(['success' => false, 'error' => 'Tidak ada file yang dikirim.']);
-    exit;
+/**
+ * Ambil nilai dari row berdasarkan index kolom KIB
+ */
+function getColValue(array $row, string $kibType, string $colName): string
+{
+    $config = KIB_STRUCTURES[$kibType];
+    $index  = $config['cols'][$colName] ?? null;
+    
+    if ($index === null || !isset($row[$index])) {
+        return '';
+    }
+    
+    $value = $row[$index];
+    
+    // Bersihkan prefix quote dari kode barang dan register
+    if (in_array($colName, ['kode', 'register'])) {
+        $value = ltrim($value, "'");
+    }
+    
+    return $value;
 }
 
-$file = $_FILES['excel_file'];
+/**
+ * Match dan create unit berdasarkan nama sekolah
+ */
+function matchOrCreateUnit(string $namaUnit, string $kodeLokasi = ''): ?array
+{
+    if (empty($namaUnit)) return null;
 
-if ($file['error'] !== UPLOAD_ERR_OK) {
-    echo json_encode(['success' => false, 'error' => 'Upload gagal. Kode error: ' . $file['error']]);
-    exit;
+    // Coba match dengan nama yang ada di database
+    $stmt = db_prepare("SELECT id, name, code FROM units WHERE LOWER(name) LIKE LOWER(?) LIMIT 1");
+    $pattern = '%' . $namaUnit . '%';
+    $stmt->bind_param('s', $pattern);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        $unit = $result->fetch_assoc();
+        return [
+            'id'   => (int)$unit['id'],
+            'name' => $unit['name'],
+            'code' => $unit['code'],
+            'auto_created' => false
+        ];
+    }
+
+    // Jika tidak ditemukan, create unit baru
+    // Gunakan kode lokasi dari Excel jika tersedia, kalau tidak generate dari nama
+    if (!empty($kodeLokasi)) {
+        $code = trim($kodeLokasi);
+    } else {
+        $code = strtoupper(preg_replace('/[^A-Z0-9]/', '', $namaUnit));
+        if (strlen($code) > 20) {
+            $code = substr($code, 0, 20);
+        }
+        if (empty($code)) {
+            $code = 'UNIT' . time();
+        }
+    }
+
+    // Pastikan code unik
+    $baseCode = $code;
+    $counter = 1;
+    while (true) {
+        $checkStmt = db_prepare("SELECT id FROM units WHERE code = ?");
+        $checkStmt->bind_param('s', $code);
+        $checkStmt->execute();
+        $checkResult = $checkStmt->get_result();
+        if ($checkResult->num_rows === 0) break;
+        $code = $baseCode . $counter;
+        $counter++;
+    }
+
+    // Insert unit baru
+    $insertStmt = db_prepare("INSERT INTO units (name, code) VALUES (?, ?)");
+    $insertStmt->bind_param('ss', $namaUnit, $code);
+    
+    if ($insertStmt->execute()) {
+        return [
+            'id'   => $insertStmt->insert_id,
+            'name' => $namaUnit,
+            'code' => $code,
+            'auto_created' => true
+        ];
+    }
+
+    return null;
 }
 
-$ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-if (!in_array($ext, ['xls', 'xlsx'])) {
-    echo json_encode(['success' => false, 'error' => 'Hanya file .xls atau .xlsx yang diperbolehkan.']);
-    exit;
-}
-
-if ($file['size'] > 10 * 1024 * 1024) {
-    echo json_encode(['success' => false, 'error' => 'Ukuran file melebihi batas 10 MB.']);
-    exit;
-}
+// ═══════════════════════════════════════════════════════════════════
+//  MAIN HANDLER
+// ═══════════════════════════════════════════════════════════════════
 
 try {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        throw new Exception('Method tidak diperbolehkan');
+    }
+
+    if (!isset($_FILES['excel']) || $_FILES['excel']['error'] !== UPLOAD_ERR_OK) {
+        throw new Exception('File tidak ditemukan atau error upload');
+    }
+
+    $file = $_FILES['excel'];
+    $ext  = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    
+    if (!in_array($ext, ['xls', 'xlsx'])) {
+        throw new Exception('Hanya file .xls atau .xlsx yang diperbolehkan');
+    }
+
+    if ($file['size'] > 10 * 1024 * 1024) {
+        throw new Exception('Ukuran file melebihi batas 10 MB');
+    }
+
+    // Parse Excel
     $result = parseKibExcel($file['tmp_name']);
 
-    // Coba match nama unit/sekolah dari info ke database
-    $infoValues = array_values($result['info']);
-    $infoKeys   = array_keys($result['info']);
+    // Format untuk response
+    $jumlahHargaNumeric = (float) str_replace(',', '', $result['jumlah_harga']);
+    $jumlahHargaFormatted = formatRupiah($result['jumlah_harga']);
 
-    // ── Ekstrak Nama Sekolah & Kode Lokasi dari info ──
+    // Ekstrak nama unit dari info (prioritas: sub unit organisasi > unit organisasi)
     $namaUnit = '';
-    $kodeLokasi = '';
-    
-    // Cari "SUB UNIT ORGANISASI" → nama sekolah
-    // Cari "NO.KODE LOKASI" atau "KODE LOKASI" → kode unit
-    foreach ($infoKeys as $idx => $key) {
-        $keyLower = strtolower(trim($key));
-        $val = trim($infoValues[$idx] ?? '');
-        
-        // Nama sekolah: prioritas "SUB UNIT" > lainnya
-        if (strpos($keyLower, 'sub unit') !== false || strpos($keyLower, 'sub_unit') !== false) {
-            $namaUnit = $val;
-        }
-        // Kode lokasi
-        if (strpos($keyLower, 'kode lokasi') !== false || strpos($keyLower, 'no.kode') !== false || $keyLower === 'no kode lokasi') {
-            $kodeLokasi = $val;
-        }
-    }
-    
-    // Fallback nama: coba dari nama file (misal "SMKN 4 BARRU.xls")
-    if (empty($namaUnit)) {
-        $fileBaseName = trim(pathinfo($file['name'], PATHINFO_FILENAME));
-        // Jangan pakai nama file jika mengandung "dinas"
-        if (!empty($fileBaseName) && stripos($fileBaseName, 'dinas') === false) {
-            $namaUnit = $fileBaseName;
-        }
-    }
-    
-    // Fallback nama: cari key yang mengandung "nama" tapi bukan "dinas"
-    if (empty($namaUnit)) {
-        foreach ($infoKeys as $idx => $key) {
-            $keyLower = strtolower($key);
-            if (strpos($keyLower, 'nama') !== false || strpos($keyLower, 'sekolah') !== false) {
-                $candidate = trim($infoValues[$idx] ?? '');
-                if (!empty($candidate) && stripos($candidate, 'dinas') === false) {
-                    $namaUnit = $candidate;
-                    break;
+    $unitKeywords = ['sub unit organisasi', 'sub unit', 'nama sekolah', 'sekolah', 'unit organisasi'];
+    foreach ($unitKeywords as $keyword) {
+        foreach ($result['info'] as $key => $val) {
+            $keyLower = strtolower(trim($key));
+            if (strpos($keyLower, $keyword) !== false && !empty($val)) {
+                // Abaikan "DINAS PENDIDIKAN" karena itu unit induk, bukan sekolah
+                if (strtoupper(trim($val)) === 'DINAS PENDIDIKAN') {
+                    continue;
                 }
+                $namaUnit = $val;
+                break 2;
             }
         }
     }
-    
-    // ── Match / Auto-Insert ke database units ──
+
+    // Ekstrak kode lokasi dari info (case-insensitive)
+    $kodeLokasi = '';
+    foreach ($result['info'] as $key => $val) {
+        if (stripos($key, 'kode lokasi') !== false && !empty($val)) {
+            $kodeLokasi = trim($val);
+            break;
+        }
+    }
+
+    // Match atau create unit
     $unitMatch = null;
     $unitAutoCreated = false;
-    
     if (!empty($namaUnit)) {
-        $units = get_units();
-        
-        // 1) Coba exact match atau partial match terhadap DB
-        foreach ($units as $u) {
-            if (
-                strtolower(trim($u['name'])) === strtolower(trim($namaUnit)) ||
-                stripos($u['name'], $namaUnit) !== false ||
-                stripos($namaUnit, $u['name']) !== false
-            ) {
-                $unitMatch = $u;
-                break;
-            }
-        }
-        
-        // 2) Coba match dari kode lokasi
-        if (!$unitMatch && !empty($kodeLokasi)) {
-            foreach ($units as $u) {
-                if (strtolower(trim($u['code'])) === strtolower(trim($kodeLokasi))) {
-                    $unitMatch = $u;
-                    break;
-                }
-            }
-        }
-        
-        // 3) Tidak ditemukan → auto-insert ke tabel units
-        if (!$unitMatch) {
-            $newCode = !empty($kodeLokasi) ? $kodeLokasi : ('AUTO_' . strtoupper(substr(md5($namaUnit), 0, 8)));
-            $newName = $namaUnit;
-            
-            // Cek apakah code sudah ada (untuk avoid duplicate key)
-            $existing = db_fetch_one("SELECT id, code, name FROM units WHERE code = ?", 's', [$newCode]);
-            if ($existing) {
-                // Code sudah ada, gunakan yang existing
-                $unitMatch = $existing;
-            } else {
-                // Insert baru
-                $stmtInsert = db_prepare("INSERT INTO units (code, name) VALUES (?, ?)");
-                $stmtInsert->bind_param('ss', $newCode, $newName);
-                if ($stmtInsert->execute()) {
-                    $newId = $stmtInsert->insert_id;
-                    $unitMatch = [
-                        'id'   => $newId,
-                        'code' => $newCode,
-                        'name' => $newName,
-                    ];
-                    $unitAutoCreated = true;
-                }
-            }
-        }
-    }
-
-    // Detect KIB type dari info (key + values) dan juga judul/header
-    $kibType = '';
-    $kibLabel = '';
-    
-    // Cek semua info keys dan values untuk KIB
-    $allInfoText = '';
-    foreach ($infoKeys as $idx => $key) {
-        $allInfoText .= $key . ' ' . ($infoValues[$idx] ?? '') . ' ';
-    }
-    
-    // Cari pattern "KIB A" s.d "KIB F" atau "Kartu Inventaris Barang A" dll
-    if (preg_match('/kib\s*([a-f])/i', $allInfoText, $m)) {
-        $kibType = strtoupper($m[1]);
-    }
-    // Cari dari deskripsi: "Aset Tetap - Tanah" => KIB A, "Peralatan" => KIB B, dll
-    if (empty($kibType)) {
-        $textLower = strtolower($allInfoText);
-        if (strpos($textLower, 'tanah') !== false) { $kibType = 'A'; $kibLabel = 'KIB A - Tanah'; }
-        elseif (strpos($textLower, 'peralatan') !== false || strpos($textLower, 'mesin') !== false) { $kibType = 'B'; $kibLabel = 'KIB B - Peralatan dan Mesin'; }
-        elseif (strpos($textLower, 'gedung') !== false || strpos($textLower, 'bangunan') !== false) { $kibType = 'C'; $kibLabel = 'KIB C - Gedung dan Bangunan'; }
-        elseif (strpos($textLower, 'jalan') !== false || strpos($textLower, 'irigasi') !== false || strpos($textLower, 'jaringan') !== false) { $kibType = 'D'; $kibLabel = 'KIB D - Jalan, Irigasi, dan Jaringan'; }
-        elseif (strpos($textLower, 'aset tetap lainnya') !== false || strpos($textLower, 'buku') !== false || strpos($textLower, 'perpustakaan') !== false) { $kibType = 'E'; $kibLabel = 'KIB E - Aset Tetap Lainnya'; }
-        elseif (strpos($textLower, 'konstruksi') !== false) { $kibType = 'F'; $kibLabel = 'KIB F - Konstruksi Dalam Pengerjaan'; }
-    }
-
-    // Cek nama file juga
-    if (empty($kibType)) {
-        if (preg_match('/kib\s*([a-f])/i', $file['name'], $m)) {
-            $kibType = strtoupper($m[1]);
-        }
-    }
-    
-    // Set label default jika belum ada
-    if (empty($kibLabel) && !empty($kibType)) {
-        $kibLabels = [
-            'A' => 'KIB A - Tanah',
-            'B' => 'KIB B - Peralatan dan Mesin',
-            'C' => 'KIB C - Gedung dan Bangunan',
-            'D' => 'KIB D - Jalan, Irigasi, dan Jaringan',
-            'E' => 'KIB E - Aset Tetap Lainnya',
-            'F' => 'KIB F - Konstruksi Dalam Pengerjaan',
-        ];
-        $kibLabel = $kibLabels[$kibType] ?? 'KIB ' . $kibType;
-    }
-
-    // Hitung total unit dari kolom jumlah
-    $totalUnit = 0;
-    foreach ($result['items'] as $row) {
-        $val = isset($row[13]) ? $row[13] : '';
-        $clean = str_replace([',', '.'], '', $val);
-        if (is_numeric($clean) && (int)$clean < 100000) {
-            $totalUnit += (int)$clean;
+        $unitMatch = matchOrCreateUnit($namaUnit, $kodeLokasi);
+        if ($unitMatch) {
+            $unitAutoCreated = $unitMatch['auto_created'];
+            unset($unitMatch['auto_created']);
         }
     }
 
     // Format items untuk preview
     $formattedItems = [];
     foreach ($result['items'] as $row) {
-        $no       = $row[0]  ?? '';
-        $nama     = $row[1]  ?? '';
-        $kode     = ltrim($row[2]  ?? '', "'");
-        $register = ltrim($row[3]  ?? '', "'");
-        $judul    = $row[4]  ?? '';
-        $jumlah   = $row[13] ?? '';
-        $tahun    = $row[14] ?? '';
-        $asal     = $row[15] ?? '';
-        $harga    = $row[16] ?? '';
-        $kab      = $row[18] ?? ($row[17] ?? '');
-
         $formattedItems[] = [
-            'no'       => $no,
-            'nama'     => $nama,
-            'kode'     => $kode,
-            'register' => $register,
-            'judul'    => $judul,
-            'jumlah'   => $jumlah,
-            'tahun'    => $tahun,
-            'asal'     => $asal,
-            'harga'    => $harga ? formatRupiahParse($harga) : '',
-            'kab'      => $kab,
+            'no'       => $row[0] ?? '',
+            'nama'     => getColValue($row, $result['kib_type'], 'nama'),
+            'kode'     => getColValue($row, $result['kib_type'], 'kode'),
+            'register' => getColValue($row, $result['kib_type'], 'register'),
+            'judul'    => getColValue($row, $result['kib_type'], 'judul'),
+            'jumlah'   => getColValue($row, $result['kib_type'], 'jumlah'),
+            'tahun'    => getColValue($row, $result['kib_type'], 'tahun'),
+            'asal'     => getColValue($row, $result['kib_type'], 'asal'),
+            'harga'    => formatRupiah(getColValue($row, $result['kib_type'], 'harga')),
+            'kab'      => getColValue($row, $result['kib_type'], 'kab'),
         ];
     }
 
-    // Parse numeric total
-    $jumlahHargaNumeric = (float) str_replace(',', '', $result['jumlah_harga']);
-
+    // Response
     echo json_encode([
-        'success'       => true,
-        'info'          => $result['info'],
-        'nama_unit'     => $namaUnit,
-        'kode_lokasi'   => $kodeLokasi,
-        'unit_match'    => $unitMatch,
-        'unit_auto_created' => $unitAutoCreated,
-        'kib_type'      => $kibType,
-        'kib_label'     => $kibLabel,
-        'total_barang'  => $result['total_barang'],
-        'total_unit'    => $totalUnit,
-        'jumlah_harga'  => $result['jumlah_harga'],
-        'jumlah_harga_numeric' => $jumlahHargaNumeric,
-        'jumlah_harga_formatted' => formatRupiahParse($result['jumlah_harga']),
-        'items'         => $formattedItems,
-        'filename'      => $file['name'],
-    ], JSON_UNESCAPED_UNICODE);
+        'success'                => true,
+        'kib_type'               => $result['kib_type'],
+        'kib_name'               => $result['kib_name'],
+        'info'                   => $result['info'],
+        'items'                  => $formattedItems,
+        'total_barang'           => $result['total_barang'],
+        'total_unit'             => $result['total_unit'],
+        'jumlah_harga'           => $result['jumlah_harga'],
+        'jumlah_harga_numeric'   => $jumlahHargaNumeric,
+        'jumlah_harga_formatted' => $jumlahHargaFormatted,
+        'nama_unit'              => $namaUnit,
+        'unit_match'             => $unitMatch,
+        'unit_auto_created'      => $unitAutoCreated,
+        'has_jumlah_column'      => KIB_STRUCTURES[$result['kib_type']]['cols']['jumlah'] !== null,
+    ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 
 } catch (Throwable $e) {
-    echo json_encode(['success' => false, 'error' => 'Gagal memproses file: ' . $e->getMessage()]);
+    http_response_code(400);
+    echo json_encode([
+        'success' => false,
+        'error'   => $e->getMessage()
+    ], JSON_UNESCAPED_UNICODE);
 }
